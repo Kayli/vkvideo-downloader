@@ -24,7 +24,7 @@ VKVideo Downloader is a simple and efficient tool that allows you to download vi
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/illiak/vkvideo-downloader.git
+git clone https://github.com/Kayli/vkvideo-downloader.git
 cd vkvideo-downloader
 ```
 
