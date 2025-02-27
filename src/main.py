@@ -3,6 +3,7 @@ import re
 import os
 import sys
 import json
+import yaml
 from typing import List, Union
 from playwright.sync_api import sync_playwright, expect
 
@@ -13,8 +14,8 @@ GOODSTUFF_VIDEOS = [
     # Add more interesting video URLs here
 ]
 
-# Output JSON file
-OUTPUT_JSON_FILE = 'video_links.json'
+# Output YAML file
+OUTPUT_YAML_FILE = 'video_links.yml'
 
 def extract_video_links(url, headless=True):
     """
@@ -134,7 +135,7 @@ def main():
     parser.add_argument('--noheadless', action='store_true', 
                         help='Disable headless mode (default: headless)')
     parser.add_argument('--list', action='store_true', 
-                        help='Output video links to JSON file')
+                        help='Output video links to YAML file')
     
     args = parser.parse_args()
     
@@ -166,15 +167,17 @@ def main():
                 for video in all_videos
             ]
             
-            # Write to JSON file
-            with open(OUTPUT_JSON_FILE, 'w', encoding='utf-8') as f:
-                json.dump(full_video_links, f, ensure_ascii=False, indent=2)
+            # Write to YAML file
+            with open(OUTPUT_YAML_FILE, 'w', encoding='utf-8') as f:
+                yaml.safe_dump(full_video_links, f, allow_unicode=True)
             
-            print(f"\nVideo links saved to {OUTPUT_JSON_FILE}", file=sys.stderr)
+            print(f"\nVideo links saved to {OUTPUT_YAML_FILE}", file=sys.stderr)
         else:
+            # Print the number of extracted video links
             print(f"\nExtracted {len(all_videos)} unique video links", file=sys.stderr)
         
-        return all_videos
+        # Return None instead of video links when using --list
+        return None if args.list else all_videos
     
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)

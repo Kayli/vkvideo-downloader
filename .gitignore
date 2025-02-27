@@ -52,3 +52,6 @@ dist/
 
 # Tests
 tests/cassettes/
+
+# Ignore video links YAML file
+vkvideo_links.yml

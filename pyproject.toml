@@ -20,8 +20,9 @@ build-backend = "poetry.core.masonry.api"
 packages = [{include = "src"}]
 
 [tool.poetry.dependencies]
-python = ">=3.11"
-playwright = "^1.41.0"
+python = "^3.11"
+playwright = "^1.41.2"
+pyyaml = "^6.0.1"
 typing = "^3.7.4"
 
 [tool.poetry.scripts]
@@ -29,3 +30,7 @@ vkvideo = "src.main:main"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.0"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
