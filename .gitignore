@@ -56,3 +56,5 @@ tests/cassettes/
 # Ignore video links YAML files
 vkvideo_links.yml
 video_links.yml
+
+# Just runner

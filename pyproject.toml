@@ -9,7 +9,14 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "playwright (>=1.50.0,<2.0.0)",
-    "yt-dlp (>=2025.2.19,<2026.0.0)"
+    "yt-dlp (>=2025.2.19,<2026.0.0)",
+    "pyyaml (>=6.0,<7.0)"
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest (>=7.3.1,<8.0.0)",
+    "pytest-cov (>=4.0.0,<5.0.0)"
 ]
 
 [build-system]
@@ -28,9 +35,5 @@ typing = "^3.7.4"
 [tool.poetry.scripts]
 vkvideo = "src.main:main"
 
-[tool.poetry.group.dev.dependencies]
-pytest = "^8.0.0"
-
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-python_files = ["test_*.py"]
