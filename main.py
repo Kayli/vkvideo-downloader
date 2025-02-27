@@ -1,5 +1,4 @@
-from playwright.sync_api import sync_playwright
-import time
+from playwright.sync_api import sync_playwright, expect
 import re
 import os
 
@@ -20,10 +19,12 @@ def extract_video_links(url, headless=False):
             page.goto(url, timeout=60000, wait_until='networkidle')
             print("Page loaded successfully")
             
-            # Wait for video elements to be present
+            # Wait for video elements to be present and visible
             print("Waiting for video elements to load...")
-            page.wait_for_selector('a[href^="/video-"]', timeout=10000)
-            time.sleep(2)  # Give the page a moment to fully render
+            # Wait for at least one video link to be present
+            page.wait_for_selector('a[href^="/video-"]', state='visible', timeout=10000)
+            # Wait for video cards to be fully loaded
+            page.wait_for_selector('[class*="VideoCard"]', state='visible', timeout=10000)
             
             # Extract video information using JavaScript
             videos = page.evaluate("""
@@ -85,6 +86,9 @@ def extract_video_links(url, headless=False):
                 }
             """)
             
+            if not videos:
+                raise ValueError("No videos found on the page")
+                
             print("\n=== Found Videos ===")
             for video in videos:
                 print(f"\nTitle: {video['title']}")
