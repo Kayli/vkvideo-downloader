@@ -2,6 +2,7 @@ import argparse
 import re
 import os
 import sys
+import json
 from typing import List, Union
 from playwright.sync_api import sync_playwright, expect
 
@@ -11,6 +12,9 @@ GOODSTUFF_VIDEOS = [
     "https://vkvideo.ru/@public111751633/all",
     # Add more interesting video URLs here
 ]
+
+# Output JSON file
+OUTPUT_JSON_FILE = 'video_links.json'
 
 def extract_video_links(url, headless=True):
     """
@@ -92,7 +96,7 @@ def extract_video_links(url, headless=True):
             video_links = [video['href'] for video in videos]
             
             print(f"\nExtracted {len(video_links)} unique video links")
-            return video_links
+            return videos
         
         except Exception as e:
             browser.close()
@@ -123,26 +127,26 @@ def validate_vk_url(url: str) -> str:
 def main():
     parser = argparse.ArgumentParser(description='VK Video Downloader: Extract video links from VK pages')
     
-    # Create a mutually exclusive group for URL input
-    url_group = parser.add_mutually_exclusive_group(required=True)
-    url_group.add_argument('url', nargs='?', type=validate_vk_url, 
-                            help='VK page URL to extract video links from')
-    url_group.add_argument('goodstuff', nargs='?', choices=['goodstuff'], 
-                            help='Use predefined list of interesting video URLs')
+    # Add argument for URL or command
+    parser.add_argument('url', nargs='?', 
+                        help='VK page URL or "goodstuff" command')
     
     parser.add_argument('--noheadless', action='store_true', 
                         help='Disable headless mode (default: headless)')
     parser.add_argument('--list', action='store_true', 
-                        help='Print video links to stdout')
+                        help='Output video links to JSON file')
     
     args = parser.parse_args()
     
     try:
         # Determine which URLs to use
-        if args.goodstuff:
+        if args.url == 'goodstuff':
             urls = GOODSTUFF_VIDEOS
+        elif args.url:
+            # Validate URL if it's provided
+            urls = [validate_vk_url(args.url)]
         else:
-            urls = [args.url]
+            raise ValueError("Either a URL or 'goodstuff' must be provided")
         
         # Collect videos from all URLs
         all_videos = []
@@ -151,12 +155,24 @@ def main():
             videos = extract_video_links(url, headless=not args.noheadless)
             all_videos.extend(videos)
         
-        # Print video links based on --list option
+        # Process video links based on --list option
         if args.list:
-            for video in all_videos:
-                print(video)
+            # Prepare video links with full URLs
+            full_video_links = [
+                {
+                    'title': video['title'], 
+                    'url': f"https://vkvideo.ru{video['href']}"
+                } 
+                for video in all_videos
+            ]
+            
+            # Write to JSON file
+            with open(OUTPUT_JSON_FILE, 'w', encoding='utf-8') as f:
+                json.dump(full_video_links, f, ensure_ascii=False, indent=2)
+            
+            print(f"\nVideo links saved to {OUTPUT_JSON_FILE}", file=sys.stderr)
         else:
-            print(f"\nExtracted {len(all_videos)} video links", file=sys.stderr)
+            print(f"\nExtracted {len(all_videos)} unique video links", file=sys.stderr)
         
         return all_videos
     
