@@ -141,7 +141,21 @@ def parse_arguments() -> argparse.Namespace:
     Returns:
         argparse.Namespace: Parsed command-line arguments
     """
-    parser = argparse.ArgumentParser(description='VK Video Link Downloader')
+    parser = argparse.ArgumentParser(
+        description='VK Video Link Downloader',
+        epilog='''
+Examples:
+  # Extract video links from predefined URLs
+  %(prog)s goodstuff
+
+  # Extract video links from predefined URLs and save to YAML
+  %(prog)s goodstuff --list
+
+  # Extract video links from a specific URL
+  %(prog)s url https://vkvideo.ru/@public111751633/all
+''',
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     
     subparsers = parser.add_subparsers(dest='command', help='Commands')
     
@@ -163,7 +177,43 @@ def main() -> Optional[List[Dict[str, str]]]:
     Returns:
         Optional[List[Dict[str, str]]]: List of extracted video links or None
     """
-    args = parse_arguments()
+    parser = argparse.ArgumentParser(
+        description='VK Video Link Downloader',
+        epilog='''
+Examples:
+  # Extract video links from predefined URLs
+  %(prog)s goodstuff
+
+  # Extract video links from predefined URLs and save to YAML
+  %(prog)s goodstuff --list
+
+  # Extract video links from a specific URL
+  %(prog)s url https://vkvideo.ru/@public111751633/all
+''',
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    
+    subparsers = parser.add_subparsers(dest='command', help='Commands')
+    
+    # Goodstuff command
+    goodstuff_parser = subparsers.add_parser('goodstuff', help='Extract links from predefined URLs')
+    goodstuff_parser.add_argument('--list', action='store_true', 
+                                  help='Save extracted links to YAML file')
+    
+    # URL command
+    url_parser = subparsers.add_parser('url', help='Extract links from specific URL')
+    url_parser.add_argument('url', type=str, help='URL to extract video links from')
+    
+    # If no arguments are provided, print help
+    if len(sys.argv) == 1:
+        parser.print_help(sys.stderr)
+        return None
+    
+    try:
+        args = parser.parse_args()
+    except SystemExit:
+        # This happens when invalid arguments are provided
+        return None
     
     # Headless mode by default
     headless = True
@@ -182,3 +232,8 @@ def main() -> Optional[List[Dict[str, str]]]:
         return extract_video_links(args.url, headless=headless)
     
     return None
+
+if __name__ == '__main__':
+    result = main()
+    if result is not None:
+        print(yaml.safe_dump(result, allow_unicode=True))
