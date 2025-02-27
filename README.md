@@ -36,18 +36,32 @@ pip install .
 
 ## Usage
 
-### As a Python Package
+### Basic Usage
 
-```python
-from src.main import extract_video_links
+```bash
+# Extract video links from a specific VK page
+poetry run vkvideo https://vk.com/video_page
 
-# Extract video links from a VK page
-videos = extract_video_links("https://vkvideo.ru/@public111751633/all")
+# Extract video links from predefined "good stuff" URLs
+poetry run vkvideo goodstuff
 
-for video in videos:
-    print(f"Title: {video['title']}")
-    print(f"URL: {video['url']}")
+# List video links to stdout
+poetry run vkvideo goodstuff --list
+
+# Show browser window during extraction
+poetry run vkvideo https://vk.com/video_page --noheadless
+
+# Specify custom output file
+poetry run vkvideo https://vk.com/video_page -o my_videos.txt
 ```
+
+### Options
+
+- `URL`: VK page URL to extract video links from
+- `goodstuff`: Use predefined list of interesting video URLs
+- `--list`: Print video links to stdout
+- `--noheadless`: Disable headless mode (browser window will be visible)
+- `--output, -o`: Specify output file for video links (default: `video_links.txt`)
 
 ## Development
 

@@ -1,8 +1,31 @@
-from playwright.sync_api import sync_playwright, expect
+import argparse
 import re
 import os
+import sys
+from typing import List, Union
+from playwright.sync_api import sync_playwright, expect
 
-def extract_video_links(url, headless=False):
+# Predefined list of "good stuff" video URLs
+GOODSTUFF_VIDEOS = [
+    "https://vkvideo.ru/@club180058315/all",
+    "https://vkvideo.ru/@public111751633/all",
+    # Add more interesting video URLs here
+]
+
+def extract_video_links(url, headless=True):
+    """
+    Extract video links from a VK page.
+
+    Args:
+        url (str): The VK page URL to extract video links from.
+        headless (bool, optional): Run browser in headless mode. Defaults to True.
+
+    Returns:
+        list: A list of video link hrefs from the page.
+
+    Raises:
+        Exception: If there are issues navigating or extracting video links.
+    """
     print(f"\nStarting extraction from URL: {url}")
     with sync_playwright() as p:
         # Launch browser with more options
@@ -49,59 +72,97 @@ def extract_video_links(url, headless=False):
                         const titleElem = card.querySelector('[class*="VideoCard__title"]');
                         if (titleElem) {
                             const text = titleElem.textContent.trim();
-                            if (text && !text.match(/^\\d+:\\d+$/)) {
-                                title = text;
-                            }
-                        }
-                        
-                        // Method 2: Look for description
-                        if (!title) {
-                            const descElem = card.querySelector('[class*="VideoCard__description"]');
-                            if (descElem) {
-                                const text = descElem.textContent.trim();
-                                if (text && !text.match(/^\\d+:\\d+$/)) {
-                                    title = text;
-                                }
-                            }
-                        }
-                        
-                        // Method 3: Look for any text content that's not a timestamp
-                        if (!title) {
-                            const texts = Array.from(card.querySelectorAll('*'))
-                                .map(el => el.textContent.trim())
-                                .filter(text => text && !text.match(/^\\d+:\\d+$/));
-                            
-                            if (texts.length > 0) {
-                                // Find the longest text that's not just a number
-                                title = texts.reduce((a, b) => a.length > b.length ? a : b);
-                            }
+                            title = text;
                         }
                         
                         videos.push({
-                            url: 'https://vkvideo.ru' + href,
-                            title: title || 'Untitled Video'
+                            'href': href,
+                            'title': title
                         });
                     });
+                    
                     return videos;
                 }
             """)
             
-            if not videos:
-                raise ValueError("No videos found on the page")
-                
-            print("\n=== Found Videos ===")
-            for video in videos:
-                print(f"\nTitle: {video['title']}")
-                print(f"URL: {video['url']}")
-                print("-" * 80)
-                
-            return videos
-                
-        finally:
-            print("\n--- Closing browser ---")
+            # Close browser
             browser.close()
+            
+            # Extract just the href links
+            video_links = [video['href'] for video in videos]
+            
+            print(f"\nExtracted {len(video_links)} unique video links")
+            return video_links
+        
+        except Exception as e:
+            browser.close()
+            print(f"Error extracting video links: {e}")
+            raise
 
-if __name__ == "__main__":
-    # Example usage
-    url = "https://vkvideo.ru/@public111751633/all"
-    videos = extract_video_links(url)
+def validate_vk_url(url: str) -> str:
+    """
+    Validate and normalize VK video URL.
+    
+    Args:
+        url (str): Input URL to validate
+    
+    Returns:
+        str: Validated and normalized URL
+    
+    Raises:
+        argparse.ArgumentTypeError: If URL is invalid
+    """
+    # Basic VK URL validation
+    vk_url_pattern = re.compile(r'^https?://(www\.)?vk\.com/(video|.*@.*)')
+    
+    if not vk_url_pattern.match(url):
+        raise argparse.ArgumentTypeError(f"Invalid VK URL: {url}")
+    
+    return url
+
+def main():
+    parser = argparse.ArgumentParser(description='VK Video Downloader: Extract video links from VK pages')
+    
+    # Create a mutually exclusive group for URL input
+    url_group = parser.add_mutually_exclusive_group(required=True)
+    url_group.add_argument('url', nargs='?', type=validate_vk_url, 
+                            help='VK page URL to extract video links from')
+    url_group.add_argument('goodstuff', nargs='?', choices=['goodstuff'], 
+                            help='Use predefined list of interesting video URLs')
+    
+    parser.add_argument('--noheadless', action='store_true', 
+                        help='Disable headless mode (default: headless)')
+    parser.add_argument('--list', action='store_true', 
+                        help='Print video links to stdout')
+    
+    args = parser.parse_args()
+    
+    try:
+        # Determine which URLs to use
+        if args.goodstuff:
+            urls = GOODSTUFF_VIDEOS
+        else:
+            urls = [args.url]
+        
+        # Collect videos from all URLs
+        all_videos = []
+        for url in urls:
+            print(f"\nProcessing URL: {url}", file=sys.stderr)
+            videos = extract_video_links(url, headless=not args.noheadless)
+            all_videos.extend(videos)
+        
+        # Print video links based on --list option
+        if args.list:
+            for video in all_videos:
+                print(video)
+        else:
+            print(f"\nExtracted {len(all_videos)} video links", file=sys.stderr)
+        
+        return all_videos
+    
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+if __name__ == '__main__':
+    main()
