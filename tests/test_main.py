@@ -1,7 +1,7 @@
 import pytest
 from playwright.sync_api import TimeoutError
 import os
-from main import extract_video_links
+from src.main import extract_video_links
 
 # Create directory for HAR files if it doesn't exist
 HAR_DIR = os.path.join(os.path.dirname(__file__), 'fixtures')

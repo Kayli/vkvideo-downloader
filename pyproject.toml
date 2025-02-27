@@ -1,7 +1,7 @@
 [project]
 name = "vk-batch-downloader"
 version = "0.1.0"
-description = ""
+description = "Download videos from VK (VKontakte) social network"
 authors = [
     {name = "illiam",email = "ilichpost@gmail.com"}
 ]
@@ -9,23 +9,15 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "playwright (>=1.50.0,<2.0.0)",
-    "langchain-community (>=0.3.18,<0.4.0)",
-    "langchain-core (>=0.3.40,<0.4.0)",
-    "beautifulsoup4 (>=4.13.3,<5.0.0)",
-    "requests (>=2.32.3,<3.0.0)",
     "yt-dlp (>=2025.2.19,<2026.0.0)"
 ]
-package-mode = false
-
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.poetry.dependencies]
-python = ">=3.11,<4.0"
-scrapegraphai = "^1.40.0"
+[tool.poetry]
+packages = [{include = "src"}]
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.0"
-vcrpy = "^5.1.0"
