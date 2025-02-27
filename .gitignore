@@ -49,3 +49,6 @@ logs/
 # Poetry
 poetry.lock
 dist/
+
+# Tests
+tests/cassettes/

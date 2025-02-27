@@ -1,16 +1,24 @@
 from playwright.sync_api import sync_playwright
 import time
 import re
+import os
 
-def extract_video_links(url):
+def extract_video_links(url, record_har=False, har_path=None):
     print(f"\nStarting extraction from URL: {url}")
     with sync_playwright() as p:
         # Launch browser with more options
         print("\n--- Launching browser ---")
         browser = p.chromium.launch(headless=False)
-        context = browser.new_context(
-            user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-        )
+        
+        # Create a new context with HAR recording if requested
+        context_options = {
+            'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        }
+        
+        if record_har and har_path:
+            context_options['record_har_path'] = har_path
+            
+        context = browser.new_context(**context_options)
         page = context.new_page()
         
         try:
@@ -92,6 +100,8 @@ def extract_video_links(url):
             return videos
                 
         finally:
+            if record_har and har_path:
+                context.close()  # This will save the HAR file
             print("\n--- Closing browser ---")
             browser.close()
 
