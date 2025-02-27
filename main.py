@@ -18,7 +18,7 @@ def extract_video_links(url):
             page.goto(url, timeout=60000, wait_until='networkidle')
             print("Page loaded successfully")
             
-            # Wait for video elements to be present and add a small delay
+            # Wait for video elements to be present
             print("Waiting for video elements to load...")
             page.wait_for_selector('a[href^="/video-"]', timeout=10000)
             time.sleep(2)  # Give the page a moment to fully render
@@ -27,61 +27,57 @@ def extract_video_links(url):
             videos = page.evaluate("""
                 () => {
                     const videos = [];
-                    // Find all links that start with /video-
-                    const links = document.querySelectorAll('a[href^="/video-"]');
                     const seen = new Set();
                     
-                    links.forEach(link => {
+                    // Find all video cards
+                    document.querySelectorAll('[class*="VideoCard"]').forEach(card => {
+                        // Find video link
+                        const link = card.querySelector('a[href^="/video-"]');
+                        if (!link) return;
+                        
                         const href = link.getAttribute('href');
-                        // Only process each video once
-                        if (!seen.has(href) && href.match(/^\/video-\\d+_\\d+$/)) {
-                            seen.add(href);
-                            
-                            // Try multiple ways to find the title
-                            let title = '';
-                            
-                            // Method 1: Check parent div with video-card-title class
-                            const parentCard = link.closest('[class*="video-card"]');
-                            if (parentCard) {
-                                const titleDiv = parentCard.querySelector('[class*="title"]');
-                                if (titleDiv) {
-                                    title = titleDiv.textContent.trim();
-                                }
+                        if (seen.has(href) || !href.match(/^\/video-\\d+_\\d+$/)) return;
+                        seen.add(href);
+                        
+                        // Try multiple ways to find the title
+                        let title = '';
+                        
+                        // Method 1: Look for title in VideoCard__title
+                        const titleElem = card.querySelector('[class*="VideoCard__title"]');
+                        if (titleElem) {
+                            const text = titleElem.textContent.trim();
+                            if (text && !text.match(/^\\d+:\\d+$/)) {
+                                title = text;
                             }
-                            
-                            // Method 2: Check for aria-label on the link itself
-                            if (!title && link.getAttribute('aria-label')) {
-                                title = link.getAttribute('aria-label');
-                            }
-                            
-                            // Method 3: Look for a sibling or nearby div with title
-                            if (!title) {
-                                const siblings = link.parentElement.querySelectorAll('[class*="title"]');
-                                for (const sibling of siblings) {
-                                    const text = sibling.textContent.trim();
-                                    if (text && !text.match(/^\\d+:\\d+$/)) {
-                                        title = text;
-                                        break;
-                                    }
-                                }
-                            }
-                            
-                            // Method 4: Get parent text if it's not just a timestamp
-                            if (!title) {
-                                const parentText = link.parentElement.textContent.trim();
-                                if (parentText && !parentText.match(/^\\d+:\\d+$/)) {
-                                    title = parentText;
-                                }
-                            }
-                            
-                            // Debug: Log the HTML around this link
-                            console.log('Link HTML:', link.parentElement.innerHTML);
-                            
-                            videos.push({
-                                url: 'https://vkvideo.ru' + href,
-                                title: title || 'Untitled Video'
-                            });
                         }
+                        
+                        // Method 2: Look for description
+                        if (!title) {
+                            const descElem = card.querySelector('[class*="VideoCard__description"]');
+                            if (descElem) {
+                                const text = descElem.textContent.trim();
+                                if (text && !text.match(/^\\d+:\\d+$/)) {
+                                    title = text;
+                                }
+                            }
+                        }
+                        
+                        // Method 3: Look for any text content that's not a timestamp
+                        if (!title) {
+                            const texts = Array.from(card.querySelectorAll('*'))
+                                .map(el => el.textContent.trim())
+                                .filter(text => text && !text.match(/^\\d+:\\d+$/));
+                            
+                            if (texts.length > 0) {
+                                // Find the longest text that's not just a number
+                                title = texts.reduce((a, b) => a.length > b.length ? a : b);
+                            }
+                        }
+                        
+                        videos.push({
+                            url: 'https://vkvideo.ru' + href,
+                            title: title || 'Untitled Video'
+                        });
                     });
                     return videos;
                 }
@@ -89,8 +85,9 @@ def extract_video_links(url):
             
             print("\n=== Found Videos ===")
             for video in videos:
-                print(f"Title: {video['title']}")
-                print(f"URL: {video['url']}\n")
+                print(f"\nTitle: {video['title']}")
+                print(f"URL: {video['url']}")
+                print("-" * 80)
                 
             return videos
                 
@@ -99,15 +96,7 @@ def extract_video_links(url):
             browser.close()
 
 if __name__ == "__main__":
-    # Example URL
+    # Example usage
     url = "https://vkvideo.ru/@public111751633/all"
-    
-    try:
-        print(f"\n=== Starting VK video URL extraction ===")
-        videos = extract_video_links(url)
-        
-        if not videos:
-            print("No videos found!")
-        
-    except Exception as e:
-        print(f"Error during extraction: {e}")
+    videos = extract_video_links(url)
+    print(f"\nTotal videos found: {len(videos)}")
