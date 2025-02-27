@@ -12,6 +12,10 @@ test:
 run:
     poetry run python src/main.py
 
+# Run main script with goodstuff command
+goodstuff:
+    poetry run python src/main.py goodstuff
+
 # Install dependencies
 install:
     poetry install

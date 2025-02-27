@@ -51,6 +51,7 @@ poetry.lock
 dist/
 
 # Tests
+.pytest_cache/
 tests/cassettes/
 
 # Ignore video links YAML files
