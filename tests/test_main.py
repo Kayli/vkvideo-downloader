@@ -12,10 +12,8 @@ def test_url():
     return "https://vkvideo.ru/@public111751633/all"
 
 def test_extract_video_links(test_url):
-    har_path = os.path.join(HAR_DIR, 'successful_extraction.har')
-    
-    # Run the extraction with HAR recording
-    videos = extract_video_links(test_url, record_har=True, har_path=har_path)
+    """Test successful video extraction"""
+    videos = extract_video_links(test_url, headless=True)
     
     # Basic assertions
     assert isinstance(videos, list), "Should return a list"
@@ -30,9 +28,7 @@ def test_extract_video_links(test_url):
         assert len(video['title']) > 0, "Title should not be empty"
 
 def test_extract_video_links_invalid_url():
-    har_path = os.path.join(HAR_DIR, 'failed_extraction.har')
-    
-    # Using a completely invalid domain that should fail
+    """Test handling of invalid URLs"""
     invalid_url = "https://nonexistent-domain-that-should-fail.example"
     with pytest.raises((TimeoutError, Exception)):
-        extract_video_links(invalid_url, record_har=True, har_path=har_path)
+        extract_video_links(invalid_url, headless=True)
