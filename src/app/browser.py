@@ -5,7 +5,7 @@ from typing import List, Dict, Optional
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 
 # Import Logger class
-from .logger import Logger, configure_logging
+from .logger import Logger
 
 class Browser:
     """

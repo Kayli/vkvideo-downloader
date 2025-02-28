@@ -4,8 +4,8 @@ import logging
 from typing import List, Dict
 
 # Import logging configuration
-from .logger import configure_logging
-logger = configure_logging()
+from .logger import Logger
+logger = Logger()
 
 # Default output file path
 DEFAULT_OUTPUT_YAML_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'vkvideo_links.yml')
