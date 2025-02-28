@@ -78,20 +78,28 @@ class CLIApp:
         
         return parser
 
-    def run(self) -> None:
+    def run(self, cli_args: Optional[List[str]] = None) -> None:
         """
         Main entry point for the VK Video Link Downloader.
+        
+        Args:
+            cli_args (Optional[List[str]], optional): Command-line arguments. 
+                Defaults to sys.argv[1:] if not provided.
         """
+        # Use provided arguments or default to system arguments
+        if cli_args is None:
+            cli_args = sys.argv[1:]
+        
         # Create parser
         parser = self.create_parser()
         
         # If no arguments, print help and exit
-        if len(sys.argv) == 1:
+        if len(cli_args) == 0:
             parser.print_help(sys.stderr)
             sys.exit(1)
         
         # Parse arguments
-        args = parser.parse_args()
+        args = parser.parse_args(cli_args)
         
         self.logger.info(f"Application started with command: {args.command}")
         
@@ -99,9 +107,9 @@ class CLIApp:
             self.logger.info(f"Extracting videos from predefined URLs: {self.videos}")
             videos = self.browser.extract_videos_from_urls(self.videos)
             
-            if args.list:
-                self.logger.info(f"Saving video links to YAML file: {OUTPUT_YAML_FILE}")
-                self.exporter.save_to_yaml(videos)
+            if hasattr(args, 'list') and args.list:
+                self.logger.info(f"Saving extracted links to {OUTPUT_YAML_FILE}")
+                self.exporter.export(videos)
             
             if videos is not None:
                 self.logger.info(f"Extracted {len(videos)} unique video links")
@@ -111,9 +119,7 @@ class CLIApp:
             self.logger.info(f"Extracting videos from URL: {args.url}")
             videos = self.browser.extract_videos_from_urls([args.url])
             
-            if videos is not None:
-                self.logger.info(f"Extracted {len(videos)} unique video links from {args.url}")
-                print(yaml.safe_dump(videos, allow_unicode=True))
+            self.logger.info(f"Extracted {len(videos)} video links")
         
         self.logger.info("Application execution completed")
 

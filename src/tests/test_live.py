@@ -1,9 +1,7 @@
-import sys
 import pytest
 from playwright.sync_api import TimeoutError
 
 from ..app.factory import CLIAppFactory
-from ..app.browser import Browser
 from src.tests.fakes.capture_logger import CaptureLogger
 
 @pytest.fixture
@@ -20,16 +18,12 @@ def test_extract_video_links(test_url, capture_logger):
     # Create CLIApp using factory with capture logger
     app = CLIAppFactory.create_cli_app(logger=capture_logger)
     
-    # Simulate command-line arguments
-    sys.argv = ['vkvideo-downloader', 'url', test_url]
-    
-    # Run the app
-    app.run()
+    # Run the app with URL command
+    app.run(['url', test_url])
     
     # Verify logging and other aspects
     assert len(capture_logger.captured_logs['info']) > 0, "Should have info logs"
     assert any("Extracting videos from URL" in log for log in capture_logger.captured_logs['info']), "Should log URL extraction"
-    
     # Check for video extraction logs
     assert any("Extracted" in log for log in capture_logger.captured_logs['info']), "Should log number of extracted videos"
 
@@ -40,11 +34,10 @@ def test_extract_video_links_invalid_url(capture_logger):
     
     # Simulate command-line arguments with an invalid URL
     invalid_url = "https://nonexistent-domain-that-should-fail.example"
-    sys.argv = ['vkvideo-downloader', 'url', invalid_url]
     
     # Expect an exception
     with pytest.raises(Exception, match="net::ERR_NAME_NOT_RESOLVED"):
-        app.run()
+        app.run(['url', invalid_url])
     
     # Check captured logs
     assert len(capture_logger.captured_logs['error']) > 0, "Should have error logs"
