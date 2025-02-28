@@ -8,6 +8,7 @@ from typing import List, Dict, Optional, Union
 from .browser import Browser
 from .exporter import VideoLinkExporter, OUTPUT_YAML_FILE
 from .factory import CLIAppFactory
+from .logger import Logger
 
 # Constants
 GOODSTUFF_VIDEOS = [
@@ -21,24 +22,28 @@ class CLIApp:
     """
     def __init__(
         self, 
-        videos: Optional[List[str]] = None, 
         exporter: Optional[VideoLinkExporter] = None,
-        browser: Optional[Browser] = None
+        browser: Optional[Browser] = None,
+        logger: Optional[Logger] = None,
+        videos: Optional[List[str]] = None
     ):
         """
-        Initialize the CLIApp with optional video URLs, exporter, and browser
+        Initialize the CLIApp with optional video URLs, exporter, browser, and logger
 
         Args:
-            videos (Optional[List[str]], optional): List of video URLs. 
-                Defaults to GOODSTUFF_VIDEOS if not provided.
             exporter (Optional[VideoLinkExporter], optional): Video link exporter.
                 Defaults to a new VideoLinkExporter with default settings.
             browser (Optional[Browser], optional): Browser for extracting video links.
                 Defaults to a new Browser instance.
+            logger (Optional[Logger], optional): Logger for recording application events.
+                Defaults to a new Logger instance.
+            videos (Optional[List[str]], optional): List of video URLs to process.
+                Defaults to GOODSTUFF_VIDEOS.
         """
         self.videos = videos or GOODSTUFF_VIDEOS
         self.exporter = exporter or VideoLinkExporter()
         self.browser = browser or Browser()
+        self.logger = logger or Logger()
 
     def create_parser(self) -> argparse.ArgumentParser:
         """
@@ -91,20 +96,29 @@ class CLIApp:
         # Parse arguments
         args = parser.parse_args()
         
+        self.logger.info(f"Application started with command: {args.command}")
+        
         if args.command == 'goodstuff':
+            self.logger.info(f"Extracting videos from predefined URLs: {self.videos}")
             videos = self.browser.extract_videos_from_urls(self.videos)
             
             if args.list:
+                self.logger.info(f"Saving video links to YAML file: {OUTPUT_YAML_FILE}")
                 self.exporter.save_to_yaml(videos)
             
             if videos is not None:
+                self.logger.info(f"Extracted {len(videos)} unique video links")
                 print(yaml.safe_dump(videos, allow_unicode=True))
         
         elif args.command == 'url':
+            self.logger.info(f"Extracting videos from URL: {args.url}")
             videos = self.browser.extract_videos_from_urls([args.url])
             
             if videos is not None:
+                self.logger.info(f"Extracted {len(videos)} unique video links from {args.url}")
                 print(yaml.safe_dump(videos, allow_unicode=True))
+        
+        self.logger.info("Application execution completed")
 
 
 if __name__ == '__main__':

@@ -1,6 +1,7 @@
 from typing import Optional, List
 
 from .exporter import VideoLinkExporter
+from .logger import Logger
 
 class CLIAppFactory:
     """
@@ -9,7 +10,8 @@ class CLIAppFactory:
     @staticmethod
     def create_cli_app(
         videos: Optional[List[str]] = None,
-        exporter: Optional[VideoLinkExporter] = None
+        exporter: Optional[VideoLinkExporter] = None,
+        logger: Optional[Logger] = None
     ):
         """
         Create a CLIApp instance with real dependencies
@@ -19,6 +21,8 @@ class CLIAppFactory:
                 Defaults to GOODSTUFF_VIDEOS if not provided.
             exporter (Optional[VideoLinkExporter], optional): Video link exporter.
                 Defaults to a new VideoLinkExporter with default settings.
+            logger (Optional[Logger], optional): Logger instance.
+                Defaults to a new Logger with default settings.
         
         Returns:
             CLIApp: Configured CLIApp instance
@@ -31,4 +35,7 @@ class CLIAppFactory:
         # Use provided exporter or create a default one
         exporter = exporter or VideoLinkExporter()
         
-        return CLIApp(videos=videos, exporter=exporter)
+        # Use provided logger or create a default one
+        logger = logger or Logger()
+        
+        return CLIApp(videos=videos, exporter=exporter, logger=logger)

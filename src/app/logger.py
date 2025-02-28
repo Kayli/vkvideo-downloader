@@ -19,3 +19,25 @@ def configure_logging(level=logging.INFO):
         ]
     )
     return logging.getLogger(__name__)
+
+class Logger:
+    """
+    A simple wrapper for Python's logging module with info and error methods.
+    """
+    
+    def __init__(self, name=None):
+        """
+        Initialize a logger with an optional name.
+        
+        Args:
+            name (str, optional): Name of the logger. Defaults to None.
+        """
+        self._logger = logging.getLogger(name or __name__)
+    
+    def info(self, msg):
+        """Log an info message."""
+        self._logger.info(msg)
+    
+    def error(self, msg):
+        """Log an error message."""
+        self._logger.error(msg)
