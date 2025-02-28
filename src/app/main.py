@@ -5,7 +5,7 @@ import argparse
 from typing import List, Dict, Optional, Union
 
 # Import classes from other modules
-from .browser import Browser
+from .extractor import Extractor
 from .exporter import VideoLinkExporter, OUTPUT_YAML_FILE
 from .factory import CLIAppFactory
 from .logger import Logger
@@ -23,23 +23,23 @@ class CLIApp:
     def __init__(
         self, 
         exporter: Optional[VideoLinkExporter] = None,
-        browser: Optional[Browser] = None,
+        extractor: Optional[Extractor] = None,
         logger: Optional[Logger] = None
     ):
         """
-        Initialize the CLIApp with optional exporter, browser, and logger
+        Initialize the CLIApp.
 
         Args:
             exporter (Optional[VideoLinkExporter], optional): Video link exporter.
                 Defaults to a new VideoLinkExporter with default settings.
-            browser (Optional[Browser], optional): Browser for extracting video links.
-                Defaults to a new Browser instance.
+            extractor (Optional[Extractor], optional): Extractor for extracting video links.
+                Defaults to a new Extractor instance.
             logger (Optional[Logger], optional): Logger for recording application events.
                 Defaults to a new Logger instance.
         """
         self.videos = GOODSTUFF_VIDEOS
         self.exporter = exporter or VideoLinkExporter()
-        self.browser = browser or Browser()
+        self.extractor = extractor or Extractor()
         self.logger = logger or Logger()
 
     def create_parser(self) -> argparse.ArgumentParser:
@@ -105,7 +105,7 @@ class CLIApp:
         
         if args.command == 'goodstuff':
             self.logger.info(f"Extracting videos from predefined URLs: {self.videos}")
-            videos = self.browser.extract_videos_from_urls(self.videos)
+            videos = self.extractor.extract_videos_from_urls(self.videos)
             
             if hasattr(args, 'list') and args.list:
                 self.logger.info(f"Saving extracted links to {OUTPUT_YAML_FILE}")
@@ -117,7 +117,7 @@ class CLIApp:
         
         elif args.command == 'url':
             self.logger.info(f"Extracting videos from URL: {args.url}")
-            videos = self.browser.extract_videos_from_urls([args.url])
+            videos = self.extractor.extract_videos_from_urls([args.url])
             
             self.logger.info(f"Extracted {len(videos)} video links")
         

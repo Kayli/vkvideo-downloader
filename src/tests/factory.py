@@ -1,7 +1,7 @@
 from typing import Optional, List, Dict
 
 from ..app.exporter import VideoLinkExporter
-from ..app.browser import Browser
+from ..app.extractor import Extractor
 from ..app.main import CLIApp, GOODSTUFF_VIDEOS
 
 class CLIAppFactoryTest:
@@ -62,57 +62,57 @@ class CLIAppFactoryTest:
             """
             A fake browser for testing purposes
             """
-            def __init__(self):
-                self.extracted_videos = []
+            def __init__(self, headless=True, timeout=10):
+                pass
 
-            def extract_video_links(self, url):
-                """
-                Simulate extracting video links
-                
-                Args:
-                    url (str): URL to extract videos from
+        def create_fake_browser(
+            *,
+            headless: bool = True,
+            timeout: int = 10,
+        ) -> Extractor:
+            """
+            Create a fake Extractor for testing
 
-                Returns:
-                    List[Dict[str, str]]: Simulated video links
-                """
-                return [f"fake_video_link_{url}"]
+            Args:
+                headless (bool, optional): Headless mode flag. Defaults to True.
+                timeout (int, optional): Timeout for browser operations. Defaults to 10.
 
-            def extract_videos_from_urls(self, urls):
-                """
-                Simulate extracting videos from multiple URLs
-                
-                Args:
-                    urls (List[str]): URLs to extract videos from
+            Returns:
+                Extractor: Fake Extractor instance
+            """
+            class FakeBrowser(Extractor):
+                def __init__(self, headless=True, timeout=10):
+                    super().__init__(headless=headless, timeout=timeout)
 
-                Returns:
-                    List[Dict[str, str]]: Simulated video links
-                """
-                return [f"fake_video_link_{url}" for url in urls]
+            return FakeBrowser(headless=headless, timeout=timeout)
 
         return {
             "exporter": CLIAppFactoryTest.create_cli_app().exporter,
-            "video_extractor": FakeBrowser()
+            "video_extractor": create_fake_browser()
         }
 
     @staticmethod
     def create_video_extractor(
         headless: bool = True,
         timeout: int = 30000
-    ) -> Browser:
+    ) -> Extractor:
         """
-        Create a fake Browser for testing
+        Create a fake Extractor for testing
 
         Args:
             headless (bool, optional): Ignored in test implementation. Defaults to True.
             timeout (int, optional): Ignored in test implementation. Defaults to 30000.
         
         Returns:
-            Browser: Fake Browser instance
+            Extractor: Fake Extractor instance
         """
-        class FakeBrowser(Browser):
+        class FakeBrowser(Extractor):
             """
             A fake browser for testing purposes
             """
+            def __init__(self, headless=True, timeout=10):
+                super().__init__(headless=headless, timeout=timeout)
+
             def extract_video_links(self, url: str) -> List[Dict[str, str]]:
                 """
                 Simulate extracting video links

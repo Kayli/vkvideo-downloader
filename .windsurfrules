@@ -1,5 +1,7 @@
 - project uses poetry as venv and dependency manager
 
+- avoid using cd command and assume we are in the project root
+
 - project uses just as task runner (justfile)
     - use "just test" command to run all tests
 
@@ -8,3 +10,8 @@
 - after a code change, run tests with "just test-unit" to make sure you didn't break annything
 
 - before commit, run tests with "just test" command to ensure you didn't break anything
+
+- we are using constructor injection and factories for all dependencies
+- we are using test doubles for most testing and mocking
+
+- we are using yt-dlp for video downloading
