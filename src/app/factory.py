@@ -4,12 +4,6 @@ from .exporter import VideoLinkExporter
 from .browser import Browser
 from .browser import extract_videos_from_urls
 
-# Constants
-GOODSTUFF_VIDEOS = [
-    "https://vkvideo.ru/@public111751633/all",
-    "https://vkvideo.ru/@club180058315/all"
-]
-
 class CLIAppFactory:
     """
     Factory for creating CLIApp instances with real dependencies
@@ -31,7 +25,7 @@ class CLIAppFactory:
         Returns:
             CLIApp: Configured CLIApp instance
         """
-        from .main import CLIApp  # Import here to avoid circular dependency
+        from .main import CLIApp, GOODSTUFF_VIDEOS  # Import here to avoid circular dependency
         
         # Use provided videos or default
         videos = videos or GOODSTUFF_VIDEOS
@@ -101,6 +95,7 @@ class CLIAppFactory:
         Returns:
             List[Dict[str, str]]: Extracted video links
         """
+        from .main import GOODSTUFF_VIDEOS
         urls = urls or GOODSTUFF_VIDEOS
         return extract_videos_from_urls(urls)
 
@@ -125,7 +120,7 @@ class CLIAppFactoryTest:
         Returns:
             CLIApp: Configured CLIApp instance
         """
-        from .main import CLIApp  # Import here to avoid circular dependency
+        from .main import CLIApp, GOODSTUFF_VIDEOS  # Import here to avoid circular dependency
         
         # Use provided videos or default
         videos = videos or GOODSTUFF_VIDEOS

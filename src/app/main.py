@@ -4,10 +4,16 @@ import yaml
 import argparse
 from typing import List, Dict, Optional, Union
 
-# Import functions from other modules
-from .browser import extract_videos_from_urls
+# Import classes from other modules
+from .browser import Browser
 from .exporter import VideoLinkExporter, OUTPUT_YAML_FILE
-from .factory import CLIAppFactory, GOODSTUFF_VIDEOS
+from .factory import CLIAppFactory
+
+# Constants
+GOODSTUFF_VIDEOS = [
+    "https://vkvideo.ru/@public111751633/all",
+    "https://vkvideo.ru/@club180058315/all"
+]
 
 class CLIApp:
     """
@@ -16,19 +22,23 @@ class CLIApp:
     def __init__(
         self, 
         videos: Optional[List[str]] = None, 
-        exporter: Optional[VideoLinkExporter] = None
+        exporter: Optional[VideoLinkExporter] = None,
+        browser: Optional[Browser] = None
     ):
         """
-        Initialize the CLIApp with optional video URLs and exporter
+        Initialize the CLIApp with optional video URLs, exporter, and browser
 
         Args:
             videos (Optional[List[str]], optional): List of video URLs. 
                 Defaults to GOODSTUFF_VIDEOS if not provided.
             exporter (Optional[VideoLinkExporter], optional): Video link exporter.
                 Defaults to a new VideoLinkExporter with default settings.
+            browser (Optional[Browser], optional): Browser for extracting video links.
+                Defaults to a new Browser instance.
         """
         self.videos = videos or GOODSTUFF_VIDEOS
-        self.exporter = exporter
+        self.exporter = exporter or VideoLinkExporter()
+        self.browser = browser or Browser()
 
     def create_parser(self) -> argparse.ArgumentParser:
         """
@@ -85,7 +95,7 @@ class CLIApp:
         args = parser.parse_args()
         
         if args.command == 'goodstuff':
-            videos = extract_videos_from_urls(self.videos)
+            videos = self.browser.extract_videos_from_urls(self.videos)
             
             if args.list:
                 self.exporter.save_to_yaml(videos)
@@ -94,7 +104,7 @@ class CLIApp:
             return videos
         
         elif args.command == 'url':
-            return extract_videos_from_urls([args.url])
+            return self.browser.extract_videos_from_urls([args.url])
         
         return None
 
