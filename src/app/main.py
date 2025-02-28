@@ -24,11 +24,10 @@ class CLIApp:
         self, 
         exporter: Optional[VideoLinkExporter] = None,
         browser: Optional[Browser] = None,
-        logger: Optional[Logger] = None,
-        videos: Optional[List[str]] = None
+        logger: Optional[Logger] = None
     ):
         """
-        Initialize the CLIApp with optional video URLs, exporter, browser, and logger
+        Initialize the CLIApp with optional exporter, browser, and logger
 
         Args:
             exporter (Optional[VideoLinkExporter], optional): Video link exporter.
@@ -37,10 +36,8 @@ class CLIApp:
                 Defaults to a new Browser instance.
             logger (Optional[Logger], optional): Logger for recording application events.
                 Defaults to a new Logger instance.
-            videos (Optional[List[str]], optional): List of video URLs to process.
-                Defaults to GOODSTUFF_VIDEOS.
         """
-        self.videos = videos or GOODSTUFF_VIDEOS
+        self.videos = GOODSTUFF_VIDEOS
         self.exporter = exporter or VideoLinkExporter()
         self.browser = browser or Browser()
         self.logger = logger or Logger()

@@ -9,7 +9,6 @@ class CLIAppFactory:
     """
     @staticmethod
     def create_cli_app(
-        videos: Optional[List[str]] = None,
         exporter: Optional[VideoLinkExporter] = None,
         logger: Optional[Logger] = None
     ):
@@ -17,8 +16,6 @@ class CLIAppFactory:
         Create a CLIApp instance with real dependencies
 
         Args:
-            videos (Optional[List[str]], optional): List of video URLs. 
-                Defaults to GOODSTUFF_VIDEOS if not provided.
             exporter (Optional[VideoLinkExporter], optional): Video link exporter.
                 Defaults to a new VideoLinkExporter with default settings.
             logger (Optional[Logger], optional): Logger instance.
@@ -27,10 +24,7 @@ class CLIAppFactory:
         Returns:
             CLIApp: Configured CLIApp instance
         """
-        from .main import CLIApp, GOODSTUFF_VIDEOS  # Import here to avoid circular dependency
-        
-        # Use provided videos or default
-        videos = videos or GOODSTUFF_VIDEOS
+        from .main import CLIApp  # Import here to avoid circular dependency
         
         # Use provided exporter or create a default one
         exporter = exporter or VideoLinkExporter()
@@ -38,4 +32,4 @@ class CLIAppFactory:
         # Use provided logger or create a default one
         logger = logger or Logger()
         
-        return CLIApp(videos=videos, exporter=exporter, logger=logger)
+        return CLIApp(exporter=exporter, logger=logger)
