@@ -1,18 +1,11 @@
 import os
 import yaml
 import logging
-import sys
 from typing import List, Dict
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, 
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stderr)
-    ]
-)
-logger = logging.getLogger(__name__)
+# Import logging configuration
+from .logger import configure_logging
+logger = configure_logging()
 
 # Default output file path
 OUTPUT_YAML_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'vkvideo_links.yml')
