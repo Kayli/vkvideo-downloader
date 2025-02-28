@@ -2,22 +2,15 @@ import os
 import sys
 import yaml
 import argparse
-import logging
 from typing import List, Dict, Optional, Union
 
 # Import functions from other modules
 from .browser import extract_video_links, extract_videos_from_urls
 from .exporter import save_video_links_to_yaml, OUTPUT_YAML_FILE
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, 
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stderr)
-    ]
-)
-logger = logging.getLogger(__name__)
+# Import logging configuration
+from .logger import configure_logging
+logger = configure_logging()
 
 # Constants
 GOODSTUFF_VIDEOS = [

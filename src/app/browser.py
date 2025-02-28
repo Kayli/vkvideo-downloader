@@ -1,18 +1,12 @@
-import logging
+import os
 import sys
+import logging
 from typing import List, Dict
-
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, 
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stderr)
-    ]
-)
-logger = logging.getLogger(__name__)
+# Import logging configuration
+from .logger import configure_logging
+logger = configure_logging()
 
 def extract_video_links(
     url: str, 
