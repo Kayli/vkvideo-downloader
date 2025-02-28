@@ -1,6 +1,6 @@
 import pytest
 from playwright.sync_api import TimeoutError
-from src.main import extract_video_links
+from ..app.main import extract_video_links
 
 @pytest.fixture
 def test_url():

@@ -6,10 +6,8 @@ import tempfile
 import sys
 import logging
 
-# Add the src directory to the Python path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
 
-from main import main, GOODSTUFF_VIDEOS, OUTPUT_YAML_FILE, save_video_links_to_yaml
+from ...app.main import main, GOODSTUFF_VIDEOS, OUTPUT_YAML_FILE, save_video_links_to_yaml
 
 class TestVKVideoCLI(unittest.TestCase):
     def test_goodstuff_list_command(self):
