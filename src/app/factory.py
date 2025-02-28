@@ -31,7 +31,10 @@ class CLIAppFactory:
         from .main import CLIApp  # Import here to avoid circular dependency
         
         # Use provided logger or create a default one
-        logger = logger or Logger()
+        if logger is None:
+            logger = Logger()
+        elif not isinstance(logger, Logger):
+            raise ValueError("Invalid logger instance")
         
         # Use provided exporter or create a default one
         exporter = exporter or VideoLinkExporter()
