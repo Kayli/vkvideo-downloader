@@ -10,11 +10,10 @@ test:
 
 # Run main script
 run:
-    poetry run python src/main.py
+    poetry run python -m src.app.main goodstuff
 
-# Run main script with goodstuff command
-goodstuff:
-    poetry run python src/main.py goodstuff
+# Alias goodstuff to run
+goodstuff: run
 
 # Install dependencies
 install:
