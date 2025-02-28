@@ -5,9 +5,10 @@ from unittest.mock import patch, MagicMock, mock_open
 import tempfile
 import sys
 import logging
-
+import importlib
 
 from ...app.main import main, GOODSTUFF_VIDEOS, OUTPUT_YAML_FILE, save_video_links_to_yaml
+
 
 class TestVKVideoCLI(unittest.TestCase):
     def test_goodstuff_list_command(self):
@@ -15,6 +16,9 @@ class TestVKVideoCLI(unittest.TestCase):
         Test the goodstuff --list functionality
         This test mocks the extract_video_links and file saving
         """
+        # Get the full module name dynamically
+        main_module_name = main.__module__
+        
         # Prepare mock video data for two URLs
         mock_videos_1 = [
             {'href': '/video-180058315_456239247', 'title': 'Test Video 1'},
@@ -26,8 +30,8 @@ class TestVKVideoCLI(unittest.TestCase):
         ]
         
         # Mocks for file saving and video extraction
-        with patch('main.extract_video_links', side_effect=[mock_videos_1, mock_videos_2]), \
-             patch('main.save_video_links_to_yaml') as mock_save_yaml, \
+        with patch(f'{main_module_name}.extract_video_links', side_effect=[mock_videos_1, mock_videos_2]), \
+             patch(f'{main_module_name}.save_video_links_to_yaml') as mock_save_yaml, \
              patch('sys.argv', ['vkvideo', 'goodstuff', '--list']):
             
             # Call main function and verify return value is None
@@ -64,6 +68,9 @@ class TestVKVideoCLI(unittest.TestCase):
         """
         Test the goodstuff command without --list
         """
+        # Get the full module name dynamically
+        main_module_name = main.__module__
+        
         # Prepare mock video data for two URLs
         mock_videos_1 = [
             {'href': '/video-180058315_456239247', 'title': 'Test Video 1'},
@@ -77,15 +84,12 @@ class TestVKVideoCLI(unittest.TestCase):
         # Combine mock videos
         mock_videos = mock_videos_1 + mock_videos_2
 
-        # Import the main module to inspect its contents
-        import main
-
         # Capture logging with more detailed mocking
-        with patch('main.extract_videos_from_urls', side_effect=lambda urls, headless: mock_videos), \
+        with patch(f'{main_module_name}.extract_videos_from_urls', side_effect=lambda urls, headless: mock_videos), \
              patch('sys.argv', ['vkvideo', 'goodstuff']):
         
             # Call main function
-            result = main.main()
+            result = main()
     
         # Verify the result contains all videos
         self.assertEqual(len(result), 4, "Incorrect number of extracted video links")
@@ -96,7 +100,10 @@ class TestVKVideoCLI(unittest.TestCase):
         """
         import sys
         import io
-        import main
+        import importlib
+        
+        # Dynamically import the module to patch
+        main_module = importlib.import_module('...app.main', package=__package__)
         
         # Temporarily capture stderr
         original_stderr = sys.stderr
@@ -108,7 +115,7 @@ class TestVKVideoCLI(unittest.TestCase):
         
         try:
             # Call main with no arguments
-            result = main.main()
+            result = main_module.main()
             
             # Check that result is None
             self.assertIsNone(result)
