@@ -5,32 +5,30 @@ import argparse
 from typing import List, Dict, Optional, Union
 
 # Import functions from other modules
-from .browser import extract_video_links, extract_videos_from_urls
-from .exporter import save_video_links_to_yaml, OUTPUT_YAML_FILE
-
-# Import logging configuration
-from .logger import configure_logging
-logger = configure_logging()
-
-# Constants
-GOODSTUFF_VIDEOS = [
-    "https://vkvideo.ru/@public111751633/all",
-    "https://vkvideo.ru/@club180058315/all"
-]
+from .browser import extract_videos_from_urls
+from .exporter import VideoLinkExporter, OUTPUT_YAML_FILE
+from .factory import CLIAppFactory, GOODSTUFF_VIDEOS
 
 class CLIApp:
     """
     Command-line interface application for VK Video Link Downloader
     """
-    def __init__(self, videos: Optional[List[str]] = None):
+    def __init__(
+        self, 
+        videos: Optional[List[str]] = None, 
+        exporter: Optional[VideoLinkExporter] = None
+    ):
         """
-        Initialize the CLIApp with optional video URLs
+        Initialize the CLIApp with optional video URLs and exporter
 
         Args:
             videos (Optional[List[str]], optional): List of video URLs. 
                 Defaults to GOODSTUFF_VIDEOS if not provided.
+            exporter (Optional[VideoLinkExporter], optional): Video link exporter.
+                Defaults to a new VideoLinkExporter with default settings.
         """
         self.videos = videos or GOODSTUFF_VIDEOS
+        self.exporter = exporter
 
     def create_parser(self) -> argparse.ArgumentParser:
         """
@@ -90,16 +88,15 @@ class CLIApp:
             videos = extract_videos_from_urls(self.videos)
             
             if args.list:
-                save_video_links_to_yaml(videos)
+                self.exporter.save_to_yaml(videos)
                 return None
             
             return videos
         
         elif args.command == 'url':
-            return extract_video_links(args.url)
+            return extract_videos_from_urls([args.url])
         
         return None
-
 
 def main() -> Optional[List[Dict[str, str]]]:
     """
@@ -108,7 +105,7 @@ def main() -> Optional[List[Dict[str, str]]]:
     Returns:
         Optional[List[Dict[str, str]]]: Result from CLIApp run method
     """
-    app = CLIApp()
+    app = CLIAppFactory.create_cli_app()
     result = app.run()
     if result is not None:
         print(yaml.safe_dump(result, allow_unicode=True))
