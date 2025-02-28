@@ -1,0 +1,10 @@
+- project uses poetry as venv and dependency manager
+
+- project uses just as task runner (justfile)
+    - use "just test" command to run all tests
+
+- use "git add -u" command to stage all pending changes
+
+- after a code change, run tests with "just test-unit" to make sure you didn't break annything
+
+- before commit, run tests with "just test" command to ensure you didn't break anything
