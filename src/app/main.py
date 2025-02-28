@@ -1,11 +1,12 @@
 import os
 import sys
-import yaml
 import argparse
 import logging
 from typing import List, Dict, Optional, Union
 
+# Import functions from other modules
 from .browser import extract_video_links, extract_videos_from_urls
+from .exporter import save_video_links_to_yaml, OUTPUT_YAML_FILE
 
 # Configure logging
 logging.basicConfig(
@@ -22,23 +23,6 @@ GOODSTUFF_VIDEOS = [
     "https://vkvideo.ru/@public111751633/all",
     "https://vkvideo.ru/@club180058315/all"
 ]
-OUTPUT_YAML_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'vkvideo_links.yml')
-
-def save_video_links_to_yaml(
-    video_links: List[Dict[str, str]], 
-    output_file: str = OUTPUT_YAML_FILE
-) -> None:
-    """
-    Save video links to a YAML file.
-    
-    Args:
-        video_links (List[Dict[str, str]]): List of video links to save
-        output_file (str): Path to output YAML file
-    """
-    with open(output_file, 'w', encoding='utf-8') as f:
-        yaml.safe_dump(video_links, f, allow_unicode=True)
-    
-    logger.info(f"Saved {len(video_links)} video links to {output_file}")
 
 def create_parser() -> argparse.ArgumentParser:
     """
