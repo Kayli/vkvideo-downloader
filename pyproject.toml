@@ -36,4 +36,6 @@ typing = "^3.7.4"
 vkvideo = "src.main:main"
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = [
+    "src/tests"
+]
