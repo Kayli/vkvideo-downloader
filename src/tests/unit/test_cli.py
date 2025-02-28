@@ -1,14 +1,15 @@
 import os
+import sys
 import yaml
 import unittest
-from unittest.mock import patch, MagicMock, mock_open
 import tempfile
-import sys
 import logging
 import importlib
+import io
+from unittest.mock import patch, MagicMock, mock_open
 
 from ...app.main import main, GOODSTUFF_VIDEOS, OUTPUT_YAML_FILE, save_video_links_to_yaml
-
+from ...app.browser import extract_video_links, extract_videos_from_urls
 
 class TestVKVideoCLI(unittest.TestCase):
     def test_goodstuff_list_command(self):
@@ -17,6 +18,7 @@ class TestVKVideoCLI(unittest.TestCase):
         This test mocks the extract_video_links and file saving
         """
         # Get the full module name dynamically
+        browser_module_name = extract_video_links.__module__
         main_module_name = main.__module__
         
         # Prepare mock video data for two URLs
@@ -30,7 +32,7 @@ class TestVKVideoCLI(unittest.TestCase):
         ]
         
         # Mocks for file saving and video extraction
-        with patch(f'{main_module_name}.extract_video_links', side_effect=[mock_videos_1, mock_videos_2]), \
+        with patch(f'{browser_module_name}.extract_video_links', side_effect=[mock_videos_1, mock_videos_2]), \
              patch(f'{main_module_name}.save_video_links_to_yaml') as mock_save_yaml, \
              patch('sys.argv', ['vkvideo', 'goodstuff', '--list']):
             
@@ -63,13 +65,13 @@ class TestVKVideoCLI(unittest.TestCase):
             # Verify title matches mock data
             self.assertEqual(video['title'], expected_titles[i])
             self.assertEqual(video['href'], expected_hrefs[i])
-    
-    def test_goodstuff_command_without_list(self):
+
+    def test_goodstuff_command(self):
         """
         Test the goodstuff command without --list
         """
         # Get the full module name dynamically
-        main_module_name = main.__module__
+        browser_module_name = extract_videos_from_urls.__module__
         
         # Prepare mock video data for two URLs
         mock_videos_1 = [
@@ -85,7 +87,7 @@ class TestVKVideoCLI(unittest.TestCase):
         mock_videos = mock_videos_1 + mock_videos_2
 
         # Capture logging with more detailed mocking
-        with patch(f'{main_module_name}.extract_videos_from_urls', side_effect=lambda urls, headless: mock_videos), \
+        with patch(f'{browser_module_name}.extract_video_links', side_effect=lambda url, headless: mock_videos_1 if 'public111751633' in url else mock_videos_2), \
              patch('sys.argv', ['vkvideo', 'goodstuff']):
         
             # Call main function
@@ -101,28 +103,23 @@ class TestVKVideoCLI(unittest.TestCase):
         import sys
         import io
         import importlib
-        
-        # Dynamically import the module to patch
-        main_module = importlib.import_module('...app.main', package=__package__)
-        
+
         # Temporarily capture stderr
         original_stderr = sys.stderr
         sys.stderr = captured_stderr = io.StringIO()
-        
+
         # Temporarily replace sys.argv
         original_argv = sys.argv
         sys.argv = ['vkvideo']
-        
+
         try:
-            # Call main with no arguments
-            result = main_module.main()
-            
-            # Check that result is None
-            self.assertIsNone(result)
-            
+            # Capture help output
+            with self.assertRaises(SystemExit):
+                main()
+
             # Check that help information was printed to stderr
             stderr_output = captured_stderr.getvalue()
-            
+
             # Verify key help text is present
             help_texts = [
                 'VK Video Link Downloader',
@@ -131,12 +128,12 @@ class TestVKVideoCLI(unittest.TestCase):
                 'url',
                 'Examples:'
             ]
-            
+
             for text in help_texts:
                 self.assertIn(text, stderr_output, f"Help text '{text}' not found in stderr output")
-        
+
         finally:
-            # Restore original stderr and argv
+            # Restore original stderr and sys.argv
             sys.stderr = original_stderr
             sys.argv = original_argv
 
