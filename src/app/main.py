@@ -76,12 +76,9 @@ class CLIApp:
         
         return parser
 
-    def run(self) -> Optional[List[Dict[str, str]]]:
+    def run(self) -> None:
         """
         Main entry point for the VK Video Link Downloader.
-        
-        Returns:
-            Optional[List[Dict[str, str]]]: List of extracted video links or None
         """
         # Create parser
         parser = self.create_parser()
@@ -99,27 +96,16 @@ class CLIApp:
             
             if args.list:
                 self.exporter.save_to_yaml(videos)
-                return None
             
-            return videos
+            if videos is not None:
+                print(yaml.safe_dump(videos, allow_unicode=True))
         
         elif args.command == 'url':
-            return self.browser.extract_videos_from_urls([args.url])
-        
-        return None
+            videos = self.browser.extract_videos_from_urls([args.url])
+            
+            if videos is not None:
+                print(yaml.safe_dump(videos, allow_unicode=True))
 
-def main() -> Optional[List[Dict[str, str]]]:
-    """
-    Convenience function to create and run CLIApp
-    
-    Returns:
-        Optional[List[Dict[str, str]]]: Result from CLIApp run method
-    """
-    app = CLIAppFactory.create_cli_app()
-    result = app.run()
-    if result is not None:
-        print(yaml.safe_dump(result, allow_unicode=True))
-    return result
 
 if __name__ == '__main__':
-    main()
+    CLIAppFactory.create_cli_app().run()
