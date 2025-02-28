@@ -102,14 +102,14 @@ class Browser:
         
         Returns:
             List[Dict[str, str]]: Consolidated list of video links
+        
+        Raises:
+            Exception: If any URL fails to extract videos
         """
         all_videos = []
         for url in urls:
-            try:
-                self.logger.info(f"Processing URL: {url}")
-                videos = self.extract_video_links(url)
-                all_videos.extend(videos)
-            except Exception as e:
-                self.logger.error(f"Failed to extract videos from {url}: {e}")
+            self.logger.info(f"Processing URL: {url}")
+            videos = self.extract_video_links(url)
+            all_videos.extend(videos)
         
         return all_videos
