@@ -8,6 +8,7 @@ import re
 # Import Logger class
 from .logger import Logger
 from .browser import Browser
+from .settings import Settings
 
 class Extractor:
     """
@@ -17,23 +18,23 @@ class Extractor:
     """
     def __init__(
         self, 
-        headless: bool = True, 
-        timeout: int = 30000, 
-        logger: Optional[Logger] = None
+        settings: Optional[Settings] = None,
+        logger: Optional[Logger] = None,
+        browser: Optional[Browser] = None
     ):
         """
         Initialize Extractor with configuration options
 
         Args:
-            headless (bool, optional): Whether to run browser in headless mode. Defaults to True.
-            timeout (int, optional): Maximum time to wait for page load and video extraction. Defaults to 30000.
+            settings (Optional[Settings], optional): Application settings. Defaults to a new Settings instance.
             logger (Optional[Logger], optional): Logger for recording browser events.
                 Defaults to a new Logger instance.
+            browser (Optional[Browser], optional): Browser instance to use for HTML retrieval.
+                If not provided, a new Browser will be created with default settings.
         """
-        self.headless = headless
-        self.timeout = timeout
+        self.settings = settings or Settings()
         self.logger = logger or Logger()
-        self.browser = Browser(headless=headless, timeout=timeout)
+        self.browser = browser or Browser(self.settings)
 
     def extract_video_links(self, url: str) -> List[Dict[str, str]]:
         """

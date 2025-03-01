@@ -3,6 +3,7 @@ from typing import Optional, List, Dict
 from ..app.exporter import VideoLinkExporter
 from ..app.extractor import Extractor
 from ..app.main import CLIApp, GOODSTUFF_VIDEOS
+from ..app.settings import Settings
 
 class CLIAppFactoryTest:
     """
@@ -62,29 +63,29 @@ class CLIAppFactoryTest:
             """
             A fake browser for testing purposes
             """
-            def __init__(self, headless=True, timeout=10):
+            def __init__(self, settings: Settings):
                 pass
 
         def create_fake_browser(
             *,
-            headless: bool = True,
-            timeout: int = 10,
+            settings: Settings = None,
         ) -> Extractor:
             """
             Create a fake Extractor for testing
 
             Args:
-                headless (bool, optional): Headless mode flag. Defaults to True.
-                timeout (int, optional): Timeout for browser operations. Defaults to 10.
+                settings (Settings, optional): Application settings. Defaults to None.
 
             Returns:
                 Extractor: Fake Extractor instance
             """
+            settings = settings or Settings()
+            
             class FakeBrowser(Extractor):
-                def __init__(self, headless=True, timeout=10):
-                    super().__init__(headless=headless, timeout=timeout)
+                def __init__(self, settings: Settings):
+                    super().__init__(settings)
 
-            return FakeBrowser(headless=headless, timeout=timeout)
+            return FakeBrowser(settings)
 
         return {
             "exporter": CLIAppFactoryTest.create_cli_app().exporter,
@@ -93,25 +94,25 @@ class CLIAppFactoryTest:
 
     @staticmethod
     def create_video_extractor(
-        headless: bool = True,
-        timeout: int = 30000
+        settings: Optional[Settings] = None
     ) -> Extractor:
         """
         Create a fake Extractor for testing
 
         Args:
-            headless (bool, optional): Ignored in test implementation. Defaults to True.
-            timeout (int, optional): Ignored in test implementation. Defaults to 30000.
+            settings (Optional[Settings], optional): Application settings. Defaults to None.
         
         Returns:
             Extractor: Fake Extractor instance
         """
+        settings = settings or Settings()
+        
         class FakeBrowser(Extractor):
             """
             A fake browser for testing purposes
             """
-            def __init__(self, headless=True, timeout=10):
-                super().__init__(headless=headless, timeout=timeout)
+            def __init__(self, settings: Settings):
+                super().__init__(settings)
 
             def extract_video_links(self, url: str) -> List[Dict[str, str]]:
                 """
@@ -147,4 +148,4 @@ class CLIAppFactoryTest:
                     } for url in urls
                 ]
 
-        return FakeBrowser(headless=headless, timeout=timeout)
+        return FakeBrowser(settings)

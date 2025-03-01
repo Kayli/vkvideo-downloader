@@ -1,5 +1,6 @@
 from typing import Optional
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
+from .settings import Settings
 
 class Browser:
     """
@@ -9,16 +10,16 @@ class Browser:
     focusing on retrieving page HTML with full content loading.
     """
     
-    def __init__(self, headless: bool = True, timeout: int = 30000):
+    def __init__(self, settings: Settings):
         """
-        Initialize Browser with configuration options.
+        Initialize Browser with configuration from Settings.
         
         Args:
-            headless (bool, optional): Whether to run browser in headless mode. Defaults to True.
-            timeout (int, optional): Maximum time to wait for page load and interactions. Defaults to 30000.
+            settings (Settings): Application settings for browser configuration
         """
-        self.headless = headless
-        self.timeout = timeout
+        self.settings = settings
+        self.headless = settings.headless
+        self.timeout = settings.page_load_timeout
     
     def get_page_html(self, url: str) -> str:
         """
@@ -64,7 +65,7 @@ class Browser:
                 """)
                 
                 # Wait a short time after scrolling to ensure all content is loaded
-                page.wait_for_timeout(1000)
+                page.wait_for_timeout(self.settings.scroll_timeout)
                 
                 # Get the full page HTML
                 full_html = page.content()
