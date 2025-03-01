@@ -6,15 +6,15 @@ default:
 
 # Run all tests
 test:
-    poetry run python -m pytest
+    poetry run pytest
 
 # Run live tests
 test-live:
-    poetry run python -m pytest src/tests/test_live.py
+    poetry run pytest src/tests/test_live.py
 
 # Run unit tests
 test-unit:
-    poetry run python -m pytest src/tests/unit
+    poetry run pytest src/tests/unit
 
 # Run the main application script
 run:
