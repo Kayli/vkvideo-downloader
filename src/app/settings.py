@@ -8,9 +8,9 @@ class Settings:
     Provides a single source of truth for various timeout and configuration settings.
     """
     
-    # Browser and page loading timeouts
-    page_load_timeout: int = 60000  # 30 seconds
-    scroll_timeout: int = 10000     # 10 seconds
+    # Browser and page loading timeouts in seconds
+    page_load_timeout_sec: int = 60  
+    scroll_timeout_sec: int = 10     
     
     # Browser configuration defaults
     headless: bool = True

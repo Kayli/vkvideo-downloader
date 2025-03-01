@@ -17,9 +17,9 @@ class Browser:
         Args:
             settings (Settings): Application settings for browser configuration
         """
-        self.settings = settings
         self.headless = settings.headless
-        self.timeout = settings.page_load_timeout
+        self.timeout = settings.page_load_timeout_sec * 1000  # Convert seconds to milliseconds
+        self.scroll_timeout = settings.scroll_timeout_sec * 1000  # Convert seconds to milliseconds
     
     def get_page_html(self, url: str) -> str:
         """
@@ -65,7 +65,7 @@ class Browser:
                 """)
                 
                 # Wait a short time after scrolling to ensure all content is loaded
-                page.wait_for_timeout(self.settings.scroll_timeout)
+                page.wait_for_timeout(self.scroll_timeout)
                 
                 # Get the full page HTML
                 full_html = page.content()
