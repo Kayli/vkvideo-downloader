@@ -1,8 +1,11 @@
-from typing import Optional, List, Dict
+from typing import Optional
+import logging
+import yaml
 
-from ..app.exporter import VideoLinkExporter
+from ..app.exporter import VideoLinkExporter, OUTPUT_YAML_FILE
 from ..app.extractor import Extractor
 from ..app.main import CLIApp, GOODSTUFF_VIDEOS
+from ..app.logger import Logger
 from ..app.settings import Settings
 
 class CLIAppFactoryTest:
@@ -11,18 +14,21 @@ class CLIAppFactoryTest:
     """
     @staticmethod
     def create_cli_app(
-        videos: Optional[List[str]] = None,
-        exporter: Optional[VideoLinkExporter] = None
+        exporter: Optional[VideoLinkExporter] = None,
+        extractor: Optional[Extractor] = None,
+        logger: Optional[Logger] = None
     ):
         """
         Create a CLIApp instance with test dependencies
 
         Args:
-            videos (Optional[List[str]], optional): List of video URLs. 
-                Defaults to GOODSTUFF_VIDEOS if not provided.
             exporter (Optional[VideoLinkExporter], optional): Video link exporter.
                 Defaults to a fake VideoLinkExporter for testing.
-        
+            extractor (Optional[Extractor], optional): Extractor for extracting video links.
+                Defaults to a fake Extractor for testing.
+            logger (Optional[Logger], optional): Logger for recording application events.
+                Defaults to a fake Logger for testing.
+
         Returns:
             CLIApp: Configured CLIApp instance
         """
@@ -30,122 +36,70 @@ class CLIAppFactoryTest:
             """
             A fake video link exporter for testing
             """
-            def __init__(self):
+            def __init__(self, output_file=OUTPUT_YAML_FILE):
                 super().__init__()
                 self.exported_links = []
+                self.output_file = output_file
 
             def export(self, links):
                 """
                 Simulate exporting links
-                
+
                 Args:
                     links (List[str]): Video links to export
                 """
                 self.exported_links.extend(links)
+                
+                # Write to the specified output file
+                with open(self.output_file, 'w', encoding='utf-8') as f:
+                    yaml.safe_dump(links, f, allow_unicode=True)
 
-        # Use provided videos or default
-        videos = videos or GOODSTUFF_VIDEOS
-        
-        # Use provided exporter or create a fake one
+        class FakeExtractor(Extractor):
+            """
+            A fake extractor for testing
+            """
+            def __init__(self, settings=None, logger=None, browser=None):
+                super().__init__(settings, logger, browser)
+                self.predefined_videos = GOODSTUFF_VIDEOS
+
+            def extract_videos_from_urls(self, urls=None):
+                """
+                Simulate video link extraction
+
+                Args:
+                    urls (Optional[List[str]], optional): URLs to extract from.
+                        Defaults to predefined videos.
+
+                Returns:
+                    List[Dict[str, str]]: Extracted video links
+                """
+                urls = urls or self.predefined_videos
+                return [
+                    {"url": f"{url}/video1", "title": f"Video from {url}"}
+                    for url in urls
+                ]
+
+        class FakeLogger(Logger):
+            """
+            A fake logger for testing
+            """
+            def __init__(self, name=None, level=logging.INFO):
+                super().__init__(name, level)
+                self.captured_logs = {"info": [], "error": []}
+
+            def info(self, msg):
+                """Capture info logs"""
+                super().info(msg)
+                self.captured_logs["info"].append(msg)
+
+            def error(self, msg):
+                """Capture error logs"""
+                super().error(msg)
+                self.captured_logs["error"].append(msg)
+
+        # Use provided dependencies or create fake ones
         exporter = exporter or FakeVideoLinkExporter()
-        
-        return CLIApp(videos=videos, exporter=exporter)
+        extractor = extractor or FakeExtractor()
+        logger = logger or FakeLogger()
 
-    @staticmethod
-    def create_dependency_graph():
-        """
-        Create a dependency graph using fake objects for testing
-
-        Returns:
-            Dict: A dictionary representing the test dependency graph
-        """
-        class FakeBrowser:
-            """
-            A fake browser for testing purposes
-            """
-            def __init__(self, settings: Settings):
-                pass
-
-        def create_fake_browser(
-            *,
-            settings: Settings = None,
-        ) -> Extractor:
-            """
-            Create a fake Extractor for testing
-
-            Args:
-                settings (Settings, optional): Application settings. Defaults to None.
-
-            Returns:
-                Extractor: Fake Extractor instance
-            """
-            settings = settings or Settings()
-            
-            class FakeBrowser(Extractor):
-                def __init__(self, settings: Settings):
-                    super().__init__(settings)
-
-            return FakeBrowser(settings)
-
-        return {
-            "exporter": CLIAppFactoryTest.create_cli_app().exporter,
-            "video_extractor": create_fake_browser()
-        }
-
-    @staticmethod
-    def create_video_extractor(
-        settings: Optional[Settings] = None
-    ) -> Extractor:
-        """
-        Create a fake Extractor for testing
-
-        Args:
-            settings (Optional[Settings], optional): Application settings. Defaults to None.
-        
-        Returns:
-            Extractor: Fake Extractor instance
-        """
-        settings = settings or Settings()
-        
-        class FakeBrowser(Extractor):
-            """
-            A fake browser for testing purposes
-            """
-            def __init__(self, settings: Settings):
-                super().__init__(settings)
-
-            def extract_video_links(self, url: str) -> List[Dict[str, str]]:
-                """
-                Simulate extracting video links
-                
-                Args:
-                    url (str): URL to extract videos from
-
-                Returns:
-                    List[Dict[str, str]]: Simulated video links
-                """
-                return [
-                    {
-                        'url': f'https://fake-vkvideo.ru/video-{url}',
-                        'title': f'Fake Video from {url}'
-                    }
-                ]
-
-            def extract_videos_from_urls(self, urls: List[str]) -> List[Dict[str, str]]:
-                """
-                Simulate extracting videos from multiple URLs
-                
-                Args:
-                    urls (List[str]): URLs to extract videos from
-
-                Returns:
-                    List[Dict[str, str]]: Simulated video links
-                """
-                return [
-                    {
-                        'url': f'https://fake-vkvideo.ru/video-{url}',
-                        'title': f'Fake Video from {url}'
-                    } for url in urls
-                ]
-
-        return FakeBrowser(settings)
+        return CLIApp(exporter=exporter, extractor=extractor, logger=logger)

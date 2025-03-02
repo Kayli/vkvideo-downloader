@@ -5,7 +5,7 @@
 - project uses just as task runner (justfile)
     - use "just test" command to run all tests
 
-- use "git add -u" command to stage all pending changes
+- git stage and commit with a single terminal command using -am flag
 
 - after a code change, run tests with "just test-unit" to make sure you didn't break annything
 
