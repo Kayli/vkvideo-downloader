@@ -22,7 +22,7 @@ class Browser:
         self.scroll_timeout = settings.scroll_timeout_sec * 1000  # Convert seconds to milliseconds
         self.record_replay = record_replay
         self.cache_dir = settings.cache_dir
-        os.makedirs(self.cache_dir, exist_ok=True)
+        
     
     def _get_cache_path(self, url: str) -> str:
         """Generate a cache file path based on the URL hash."""
@@ -44,6 +44,10 @@ class Browser:
             Exception: For other unexpected errors during page retrieval.
         """
         cache_path = self._get_cache_path(url)
+        
+        # Make sure that cache directory exists when record_replay enabled
+        if self.record_replay:
+            os.makedirs(self.cache_dir, exist_ok=True)
         
         # Use cached HTML if available
         if self.record_replay and os.path.exists(cache_path):
