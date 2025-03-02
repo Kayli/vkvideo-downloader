@@ -125,4 +125,5 @@ class CLIApp:
 
 
 if __name__ == '__main__':
+    from .factory import CLIAppFactory
     CLIAppFactory.create_cli_app().run()

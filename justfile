@@ -5,8 +5,7 @@ default:
     @just --list
 
 # Run all tests
-test:
-    poetry run pytest
+test: test-unit && test-live
 
 # Run live tests
 test-live:
@@ -38,11 +37,3 @@ clean:
     find . -type f -name "*.pyo" -delete
     find . -type f -name "*.pyd" -delete
     poetry env remove --all
-
-# Run integration tests
-test-integration:
-    poetry run python -m pytest src/tests/integration
-
-# Run system tests
-test-system:
-    poetry run python -m pytest src/tests/system
