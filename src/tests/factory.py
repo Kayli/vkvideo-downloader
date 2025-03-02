@@ -8,7 +8,7 @@ from ..app.cli_app import CLIApp, GOODSTUFF_VIDEOS
 from ..app.logger import Logger
 from ..app.settings import Settings
 
-class CLIAppFactoryTest:
+class CLIAppTestFactory:
     """
     Factory for creating CLIApp instances with test dependencies
     """

@@ -6,9 +6,9 @@ import yaml
 import tempfile
 import unittest.mock
 
-from ...app.main import GOODSTUFF_VIDEOS, CLIApp
+from ...app.cli_app import CLIApp, GOODSTUFF_VIDEOS
 from ...app.exporter import OUTPUT_YAML_FILE
-from ...tests.factory import CLIAppFactoryTest
+from ...tests.factory import CLIAppTestFactory
 
 def test_goodstuff_list_command(tmp_path):
     """
@@ -23,8 +23,8 @@ def test_goodstuff_list_command(tmp_path):
     output_yaml_path = os.path.join(tmp_path, OUTPUT_YAML_FILE)
 
     # Create a test CLIApp with mock dependencies and custom output path
-    exporter = CLIAppFactoryTest.create_cli_app().exporter.__class__(output_file=output_yaml_path)
-    app = CLIAppFactoryTest.create_cli_app(exporter=exporter)
+    exporter = CLIAppTestFactory.create_cli_app().exporter.__class__(output_file=output_yaml_path)
+    app = CLIAppTestFactory.create_cli_app(exporter=exporter)
 
     # Run the command with --list argument
     app.run(['goodstuff', '--list'])
