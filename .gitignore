@@ -58,7 +58,5 @@ tests/cassettes/
 vkvideo_links.yml
 video_links.yml
 
-# Just runner
-
 # Recordings
-recordings/
+./recordings/
