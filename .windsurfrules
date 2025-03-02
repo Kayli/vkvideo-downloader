@@ -5,7 +5,7 @@
 - project uses just as task runner (justfile)
     - use "just test" command to run all tests
 
-- git stage and commit with a single terminal command using -am flag
+- git stage and commit with a on-liner git add . && git commit -m "<COMMIT-MESSAGE>"
 
 - after a code change, run tests with "just test-unit" to make sure you didn't break annything
 
