@@ -1,7 +1,7 @@
 import pytest
 import os
 
-from ..fakes.capture_logger import CaptureLogger
+from .fakes.capture_logger import CaptureLogger
 from ...app.settings import Settings
 from ...app.browser import Browser
 from ...app.extractor import Extractor, is_timestamp
