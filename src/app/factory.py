@@ -1,6 +1,5 @@
 from typing import Optional, List
 
-from .exporter import VideoLinkExporter
 from .logger import Logger
 from .extractor import Extractor
 
@@ -10,7 +9,6 @@ class CLIAppFactory:
     """
     @staticmethod
     def create_cli_app(
-        exporter: Optional[VideoLinkExporter] = None,
         extractor: Optional[Extractor] = None,
         logger: Optional[Logger] = None
     ):
@@ -18,8 +16,6 @@ class CLIAppFactory:
         Create a CLIApp instance with real dependencies
 
         Args:
-            exporter (Optional[VideoLinkExporter], optional): Video link exporter.
-                Defaults to a new VideoLinkExporter with default settings.
             extractor (Optional[Extractor], optional): Extractor for extracting video links.
                 Defaults to a new Extractor instance.
             logger (Optional[Logger], optional): Logger instance.
@@ -36,10 +32,7 @@ class CLIAppFactory:
         elif not isinstance(logger, Logger):
             raise ValueError("Invalid logger instance")
         
-        # Use provided exporter or create a default one
-        exporter = exporter or VideoLinkExporter()
-        
         # Use provided extractor or create a default one with the logger
         extractor = extractor or Extractor(logger=logger)
         
-        return CLIApp(exporter=exporter, extractor=extractor, logger=logger)
+        return CLIApp(extractor=extractor, logger=logger)

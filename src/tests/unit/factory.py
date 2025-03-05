@@ -2,7 +2,6 @@ from typing import Optional
 import logging
 from pathlib import Path
 
-from ...app.exporter import VideoLinkExporter, DEFAULT_OUTPUT_YAML_FILE
 from ...app.extractor import Extractor, VideoDTO
 from ...app.cli_app import CLIApp, GOODSTUFF_VIDEOS
 from ...app.logger import Logger
@@ -15,7 +14,6 @@ class CLIAppTestFactory:
     """
     @staticmethod
     def create_cli_app(
-        exporter: Optional[VideoLinkExporter] = None,
         extractor: Optional[Extractor] = None,
         logger: Optional[Logger] = None
     ):
@@ -23,8 +21,6 @@ class CLIAppTestFactory:
         Create a CLIApp instance with test dependencies
 
         Args:
-            exporter (Optional[VideoLinkExporter], optional): Video link exporter.
-                Defaults to a fake VideoLinkExporter for testing.
             extractor (Optional[Extractor], optional): Extractor for extracting video links.
                 Defaults to a fake Extractor for testing.
             logger (Optional[Logger], optional): Logger for recording application events.
@@ -33,22 +29,6 @@ class CLIAppTestFactory:
         Returns:
             CLIApp: Configured CLIApp instance
         """
-        class FakeVideoLinkExporter(VideoLinkExporter):
-            """
-            A fake video link exporter for testing
-            """
-            def __init__(self, output_file=DEFAULT_OUTPUT_YAML_FILE):
-                super().__init__()
-                self.exported_links = []
-
-            def export(self, links):
-                """
-                Simulate exporting links
-
-                Args:
-                    links (List[str]): Video links to export
-                """
-                self.exported_links.extend(links)
 
         class FakeExtractor(Extractor):
             """
@@ -119,9 +99,8 @@ class CLIAppTestFactory:
                 self.captured_logs["error"].append(msg)
 
         # Use provided dependencies or create fake ones
-        exporter = exporter or FakeVideoLinkExporter()
         extractor = extractor or FakeExtractor()
         logger = logger or FakeLogger()
         downloader = FakeDownloader(logger)
 
-        return CLIApp(exporter=exporter, extractor=extractor, logger=logger, downloader=downloader)
+        return CLIApp(extractor=extractor, logger=logger, downloader=downloader)

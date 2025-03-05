@@ -8,7 +8,6 @@ from typing import List, Optional
 from pathlib import Path
 
 from .extractor import Extractor
-from .exporter import VideoLinkExporter, DEFAULT_OUTPUT_YAML_FILE
 from .downloader import Downloader
 from .logger import Logger
 
@@ -38,7 +37,6 @@ class CLIApp:
     """
     def __init__(
         self, 
-        exporter: Optional[VideoLinkExporter] = None,
         extractor: Optional[Extractor] = None,
         downloader: Optional[Downloader] = None,
         logger: Optional[Logger] = None
@@ -47,8 +45,6 @@ class CLIApp:
         Initialize the CLIApp.
 
         Args:
-            exporter (Optional[VideoLinkExporter], optional): Video link exporter.
-                Defaults to a new VideoLinkExporter with default settings.
             extractor (Optional[Extractor], optional): Extractor for extracting video links.
                 Defaults to a new Extractor instance.
             downloader (Optional[Downloader], optional): Downloader for downloading videos.
@@ -57,7 +53,6 @@ class CLIApp:
                 Defaults to a new Logger instance.
         """
         self.videos = GOODSTUFF_VIDEOS
-        self.exporter = exporter or VideoLinkExporter()
         self.extractor = extractor or Extractor()
         self.downloader = downloader or Downloader()
         self.logger = logger or Logger()
@@ -76,9 +71,6 @@ class CLIApp:
       # Extract video links from predefined URLs
       %(prog)s goodstuff
     
-      # Extract video links from predefined URLs and save to YAML
-      %(prog)s goodstuff --list
-    
       # Extract video links from a specific URL
       %(prog)s url https://vkvideo.ru/@public111751633/all
     ''',
@@ -89,8 +81,6 @@ class CLIApp:
         
         # Goodstuff command
         goodstuff_parser = subparsers.add_parser('goodstuff', help='Extract links from predefined URLs')
-        goodstuff_parser.add_argument('--list', action='store_true', 
-                                      help='Save extracted links to YAML file')
         goodstuff_parser.add_argument(
             '-d', 
             '--destination', 
@@ -144,10 +134,6 @@ class CLIApp:
         if command == 'goodstuff':
             self.logger.info(f"Extracting videos from predefined URLs: {self.videos}")
             videos = self.extractor.extract_videos_from_urls(self.videos)
-            
-            if hasattr(args, 'list') and args.list:
-                self.logger.info(f"Saving extracted links to YAML file")
-                self.exporter.export(videos)
             
             if videos is not None:
                 self.logger.info(f"Extracted {len(videos)} unique video links")

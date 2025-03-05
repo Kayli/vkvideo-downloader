@@ -45,9 +45,6 @@ poetry run vkvideo https://vk.com/video_page
 # Extract video links from predefined "good stuff" URLs
 poetry run vkvideo goodstuff
 
-# List video links to stdout
-poetry run vkvideo goodstuff --list
-
 # Show browser window during extraction
 poetry run vkvideo https://vk.com/video_page --noheadless
 
@@ -59,7 +56,6 @@ poetry run vkvideo https://vk.com/video_page -o my_videos.txt
 
 - `URL`: VK page URL to extract video links from
 - `goodstuff`: Use predefined list of interesting video URLs
-- `--list`: Print video links to stdout
 - `--noheadless`: Disable headless mode (browser window will be visible)
 - `--output, -o`: Specify output file for video links (default: `video_links.txt`)
 

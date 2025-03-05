@@ -8,29 +8,12 @@ import unittest.mock
 import re
 
 from ...app.cli_app import CLIApp, GOODSTUFF_VIDEOS, ExitCode
-from ...app.exporter import VideoLinkExporter
 from ..unit.factory import CLIAppTestFactory
 
-def test_goodstuff_list_command():
-    """
-    Test the goodstuff --list functionality
-    
-    Verifies that:
-    1. The correct number of videos are extracted
-    2. The correct links are exported
-    """
-    # Create a test CLIApp with mock dependencies
-    app = CLIAppTestFactory.create_cli_app()
-
-    # Run the command with --list argument
-    app.run(['goodstuff', '--list'])
-
-    # Verify the number of extracted links matches the number of predefined URLs
-    assert len(app.exporter.exported_links) > 0, "Should extract at least one video link"
 
 def test_goodstuff_command():
     """
-    Test the goodstuff command without --list
+    Test the goodstuff command
     """
     # Create a test CLIApp with mock dependencies
     app = CLIAppTestFactory.create_cli_app()
