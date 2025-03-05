@@ -2,7 +2,9 @@ import os
 import sys
 import yaml
 import argparse
+import subprocess
 from typing import List, Optional
+from pathlib import Path
 
 from .extractor import Extractor
 from .exporter import VideoLinkExporter, DEFAULT_OUTPUT_YAML_FILE
@@ -74,10 +76,24 @@ class CLIApp:
         goodstuff_parser = subparsers.add_parser('goodstuff', help='Extract links from predefined URLs')
         goodstuff_parser.add_argument('--list', action='store_true', 
                                       help='Save extracted links to YAML file')
+        goodstuff_parser.add_argument(
+            '-d', 
+            '--destination', 
+            type=str, 
+            default=os.getcwd(), 
+            help='Destination folder for downloaded videos (default: current working directory)'
+        )
         
         # URL command
         url_parser = subparsers.add_parser('url', help='Extract links from specific URL')
         url_parser.add_argument('url', type=str, help='URL to extract video links from')
+        url_parser.add_argument(
+            '-d', 
+            '--destination', 
+            type=str, 
+            default=os.getcwd(), 
+            help='Destination folder for downloaded videos (default: current working directory)'
+        )
         
         return parser
 
@@ -109,6 +125,15 @@ class CLIApp:
         
         self.logger.info(f"Application started with command: {args.command}")
         
+        # Validate destination directory
+        dest_path = Path(args.destination).resolve()
+        if not dest_path.exists():
+            self.logger.error(f"Destination directory does not exist: {dest_path}")
+            return 1
+        if not dest_path.is_dir():
+            self.logger.error(f"Destination is not a directory: {dest_path}")
+            return 1
+
         if args.command == 'goodstuff':
             self.logger.info(f"Extracting videos from predefined URLs: {self.videos}")
             videos = self.extractor.extract_videos_from_urls(self.videos)
@@ -127,10 +152,17 @@ class CLIApp:
             
             self.logger.info(f"Extracted {len(videos)} video links")
 
-        #self.logger.info(f"Downloading videos ...")
-        #for video in videos:
-        #    self.logger.info(f"Downloading {video.title} via {video.url}...")
-        #    self.downloader.download_video(video.url, video.title)
+        self.logger.info(f"Downloading videos ...")
+        for video in videos:
+            try:
+                self.logger.info(f"Downloading {video.title} via {video.url}...")
+                self.downloader.download_video(
+                    video.url, 
+                    video.title, 
+                    destination_folder=str(dest_path)
+                )
+            except subprocess.CalledProcessError as e:
+                self.logger.error(f"Failed to download video {video.title} from {video.url}: {e}")
         
         self.logger.info("Application execution completed")
         return 0

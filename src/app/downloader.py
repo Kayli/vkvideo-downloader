@@ -8,7 +8,7 @@ class Downloader:
     def __init__(self, logger: Optional[Logger] = None):
         self.logger = logger or Logger()
 
-    def _build_base_command(self, url: str, desired_filename: str, low_res: bool = False) -> list:
+    def _build_base_command(self, url: str, desired_filename: str, low_res: bool = False, destination_folder: Optional[str] = None) -> list:
         """
         Build the base command for yt-dlp with common parameters.
 
@@ -16,6 +16,7 @@ class Downloader:
             url (str): The URL of the video to download
             desired_filename (str): The base filename for the downloaded video
             low_res (bool, optional): If True, download a low-resolution version of the video. Defaults to False.
+            destination_folder (str, optional): Folder to save the video. Defaults to None.
 
         Returns:
             list: The base command as a list of strings
@@ -29,6 +30,10 @@ class Downloader:
         # Add low-resolution format selection if enabled
         if low_res:
             command.extend(["-f", "dash_sep-1"])
+        
+        # Add destination folder if specified
+        if destination_folder:
+            command.extend(["-P", destination_folder])
         
         return command
 
@@ -76,7 +81,7 @@ class Downloader:
         
         return filename
 
-    def download_video(self, url: str, desired_filename: str, low_res: bool = False) -> Path:
+    def download_video(self, url: str, desired_filename: str, low_res: bool = False, destination_folder: Optional[str] = None) -> Path:
         """
         Download a video from the given URL.
 
@@ -84,6 +89,7 @@ class Downloader:
             url (str): The URL of the video to download
             desired_filename (str): The base filename for the downloaded video
             low_res (bool, optional): If True, download a low-resolution version of the video. Defaults to False.
+            destination_folder (str, optional): Folder to save the video. Defaults to None.
 
         Returns:
             Path: Path to the downloaded video file
@@ -95,7 +101,7 @@ class Downloader:
         filename = self._get_filename(url, desired_filename)
         
         # Build download command (with low-res option if specified)
-        command = self._build_base_command(url, desired_filename, low_res)
+        command = self._build_base_command(url, desired_filename, low_res, destination_folder)
         
         self.logger.debug(f"Downloading video with command: {' '.join(command)}")
         
