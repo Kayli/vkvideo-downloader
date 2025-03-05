@@ -6,6 +6,7 @@ from ...app.extractor import Extractor
 from ...app.cli_app import CLIApp, GOODSTUFF_VIDEOS
 from ...app.logger import Logger
 from ...app.settings import Settings
+from ...app.downloader import Downloader  # Import the Downloader class
 
 class CLIAppTestFactory:
     """
@@ -96,4 +97,4 @@ class CLIAppTestFactory:
         extractor = extractor or FakeExtractor()
         logger = logger or FakeLogger()
 
-        return CLIApp(exporter=exporter, extractor=extractor, logger=logger)
+        return CLIApp(exporter=exporter, extractor=extractor, logger=logger, downloader=Downloader(logger))
