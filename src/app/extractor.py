@@ -65,6 +65,11 @@ class Extractor:
                 href = link.get('href')
                 title = link.get_text(strip=True) or 'Untitled Video'
                 
+                # Check if the title is a timestamp
+                if is_timestamp(title):
+                    self.logger.warning(f"Detected timestamp instead of title: {title}")
+                    continue  # Skip this link if it's a timestamp
+                
                 # Convert to full URL
                 full_url = f'https://vkvideo.ru{href}'
                 
@@ -104,3 +109,10 @@ class Extractor:
             all_videos.extend(videos)
         
         return all_videos
+
+
+def is_timestamp(title):
+    # Simple regex to check if the title matches a timestamp format
+    import re
+    timestamp_pattern = re.compile(r'^(\d{1,2}:\d{2}:\d{2}|\d{1,2}:\d{2})$')
+    return bool(timestamp_pattern.match(title))
