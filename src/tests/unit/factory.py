@@ -1,11 +1,11 @@
 from typing import Optional
 import logging
 
-from ..app.exporter import VideoLinkExporter, OUTPUT_YAML_FILE
-from ..app.extractor import Extractor
-from ..app.cli_app import CLIApp, GOODSTUFF_VIDEOS
-from ..app.logger import Logger
-from ..app.settings import Settings
+from ...app.exporter import VideoLinkExporter, OUTPUT_YAML_FILE
+from ...app.extractor import Extractor
+from ...app.cli_app import CLIApp, GOODSTUFF_VIDEOS
+from ...app.logger import Logger
+from ...app.settings import Settings
 
 class CLIAppTestFactory:
     """
