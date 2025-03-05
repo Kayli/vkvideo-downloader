@@ -5,7 +5,7 @@ import argparse
 from typing import List, Optional
 
 from .extractor import Extractor
-from .exporter import VideoLinkExporter, OUTPUT_YAML_FILE
+from .exporter import VideoLinkExporter, DEFAULT_OUTPUT_YAML_FILE
 from .downloader import Downloader
 from .logger import Logger
 
@@ -114,7 +114,7 @@ class CLIApp:
             videos = self.extractor.extract_videos_from_urls(self.videos)
             
             if hasattr(args, 'list') and args.list:
-                self.logger.info(f"Saving extracted links to {OUTPUT_YAML_FILE}")
+                self.logger.info(f"Saving extracted links to YAML file")
                 self.exporter.export(videos)
             
             if videos is not None:

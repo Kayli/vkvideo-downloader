@@ -8,7 +8,7 @@ import unittest.mock
 import re
 
 from ...app.cli_app import CLIApp, GOODSTUFF_VIDEOS
-from ...app.exporter import OUTPUT_YAML_FILE
+from ...app.exporter import VideoLinkExporter
 from ..unit.factory import CLIAppTestFactory
 
 def test_goodstuff_list_command():

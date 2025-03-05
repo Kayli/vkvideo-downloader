@@ -40,21 +40,3 @@ class VideoLinkExporter:
             yaml.safe_dump(video_links, f, allow_unicode=True)
         
         self.logger.info(f"Saved {len(video_links)} video links to {self.output_file}")
-
-# Maintain backwards compatibility
-def save_video_links_to_yaml(
-    video_links: List[Dict[str, str]], 
-    output_file: str = DEFAULT_OUTPUT_YAML_FILE
-) -> None:
-    """
-    Backwards compatible function to save video links to YAML
-    
-    Args:
-        video_links (List[Dict[str, str]]): List of video links to save
-        output_file (str): Path to output YAML file
-    """
-    exporter = VideoLinkExporter(output_file)
-    exporter.save_to_yaml(video_links)
-
-# Maintain the original constant for backwards compatibility
-OUTPUT_YAML_FILE = DEFAULT_OUTPUT_YAML_FILE

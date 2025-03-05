@@ -16,3 +16,5 @@
 - we are using test doubles for most testing and mocking
 
 - we are using yt-dlp for video downloading
+
+- do not display suggested code changes in cascade chat, just make changes using one of your tools so that I can review them

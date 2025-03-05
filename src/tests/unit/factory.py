@@ -1,7 +1,7 @@
 from typing import Optional
 import logging
 
-from ...app.exporter import VideoLinkExporter, OUTPUT_YAML_FILE
+from ...app.exporter import VideoLinkExporter, DEFAULT_OUTPUT_YAML_FILE
 from ...app.extractor import Extractor
 from ...app.cli_app import CLIApp, GOODSTUFF_VIDEOS
 from ...app.logger import Logger
@@ -35,7 +35,7 @@ class CLIAppTestFactory:
             """
             A fake video link exporter for testing
             """
-            def __init__(self, output_file=OUTPUT_YAML_FILE):
+            def __init__(self, output_file=DEFAULT_OUTPUT_YAML_FILE):
                 super().__init__()
                 self.exported_links = []
 
