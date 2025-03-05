@@ -1,8 +1,9 @@
 from typing import Optional
 import logging
+from pathlib import Path
 
 from ...app.exporter import VideoLinkExporter, DEFAULT_OUTPUT_YAML_FILE
-from ...app.extractor import Extractor
+from ...app.extractor import Extractor, VideoDTO
 from ...app.cli_app import CLIApp, GOODSTUFF_VIDEOS
 from ...app.logger import Logger
 from ...app.settings import Settings
@@ -66,13 +67,38 @@ class CLIAppTestFactory:
                         Defaults to predefined videos.
 
                 Returns:
-                    List[Dict[str, str]]: Extracted video links
+                    List[VideoDTO]: Extracted video links
                 """
                 urls = urls or self.predefined_videos
                 return [
-                    {"url": f"{url}/video1", "title": f"Video from {url}"}
+                    VideoDTO(url=f"{url}/video1", title=f"Video from {url}")
                     for url in urls
                 ]
+
+        class FakeDownloader(Downloader):
+            """
+            A fake downloader for testing
+            """
+            def __init__(self, logger=None):
+                super().__init__(logger)
+
+            def download_video(self, url: str, desired_filename: str, low_res: bool = False, destination_folder: Optional[str] = None) -> Path:
+                """
+                Simulate video download
+
+                Args:
+                    url (str): URL of the video to download
+                    desired_filename (str): Base filename for the video
+                    low_res (bool, optional): Whether to download low resolution. Defaults to False.
+                    destination_folder (Optional[str], optional): Folder to save the video. Defaults to None.
+
+                Returns:
+                    Path: Path to the simulated downloaded video
+                """
+                # Create a mock path in the destination folder
+                if destination_folder is None:
+                    destination_folder = '.'
+                return Path(destination_folder) / f"{desired_filename}.mp4"
 
         class FakeLogger(Logger):
             """
@@ -96,5 +122,6 @@ class CLIAppTestFactory:
         exporter = exporter or FakeVideoLinkExporter()
         extractor = extractor or FakeExtractor()
         logger = logger or FakeLogger()
+        downloader = FakeDownloader(logger)
 
-        return CLIApp(exporter=exporter, extractor=extractor, logger=logger, downloader=Downloader(logger))
+        return CLIApp(exporter=exporter, extractor=extractor, logger=logger, downloader=downloader)

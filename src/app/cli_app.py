@@ -145,7 +145,7 @@ class CLIApp:
             if videos is not None:
                 self.logger.info(f"Extracted {len(videos)} unique video links")
 
-        
+         
         elif args.command == 'url':
             self.logger.info(f"Extracting videos from URL: {args.url}")
             videos = self.extractor.extract_videos_from_urls([args.url])
