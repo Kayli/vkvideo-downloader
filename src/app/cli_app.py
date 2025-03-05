@@ -97,6 +97,78 @@ class CLIApp:
         
         return parser
 
+    def _validate_destination(self, dest_path: Path) -> bool:
+        """
+        Validate the destination directory.
+
+        Args:
+            dest_path (Path): Path to the destination directory
+
+        Returns:
+            bool: True if destination is valid, False otherwise
+        """
+        if not dest_path.exists():
+            self.logger.error(f"Destination directory does not exist: {dest_path}")
+            return False
+        if not dest_path.is_dir():
+            self.logger.error(f"Destination is not a directory: {dest_path}")
+            return False
+        return True
+
+    def _extract_videos(self, command: str, args) -> Optional[List]:
+        """
+        Extract videos based on the command.
+
+        Args:
+            command (str): The command ('goodstuff' or 'url')
+            args: Parsed command-line arguments
+
+        Returns:
+            Optional[List]: List of extracted videos or None
+        """
+        if command == 'goodstuff':
+            self.logger.info(f"Extracting videos from predefined URLs: {self.videos}")
+            videos = self.extractor.extract_videos_from_urls(self.videos)
+            
+            if hasattr(args, 'list') and args.list:
+                self.logger.info(f"Saving extracted links to YAML file")
+                self.exporter.export(videos)
+            
+            if videos is not None:
+                self.logger.info(f"Extracted {len(videos)} unique video links")
+            
+            return videos
+
+        elif command == 'url':
+            self.logger.info(f"Extracting videos from URL: {args.url}")
+            videos = self.extractor.extract_videos_from_urls([args.url])
+            
+            self.logger.info(f"Extracted {len(videos)} video links")
+            
+            return videos
+
+        return None
+
+    def _download_videos(self, videos: List, dest_path: Path) -> None:
+        """
+        Download videos to the specified destination.
+
+        Args:
+            videos (List): List of videos to download
+            dest_path (Path): Destination path for downloads
+        """
+        self.logger.info(f"Downloading videos ...")
+        for video in videos:
+            try:
+                self.logger.info(f"Downloading {video.title} via {video.url}...")
+                self.downloader.download_video(
+                    video.url, 
+                    video.title, 
+                    destination_folder=str(dest_path)
+                )
+            except subprocess.CalledProcessError as e:
+                self.logger.error(f"Failed to download video {video.title} from {video.url}: {e}")
+
     def run(self, cli_args: Optional[List[str]] = None) -> int:
         """
         Main entry point for the VK Video Link Downloader.
@@ -127,42 +199,15 @@ class CLIApp:
         
         # Validate destination directory
         dest_path = Path(args.destination).resolve()
-        if not dest_path.exists():
-            self.logger.error(f"Destination directory does not exist: {dest_path}")
-            return 1
-        if not dest_path.is_dir():
-            self.logger.error(f"Destination is not a directory: {dest_path}")
+        if not self._validate_destination(dest_path):
             return 1
 
-        if args.command == 'goodstuff':
-            self.logger.info(f"Extracting videos from predefined URLs: {self.videos}")
-            videos = self.extractor.extract_videos_from_urls(self.videos)
-            
-            if hasattr(args, 'list') and args.list:
-                self.logger.info(f"Saving extracted links to YAML file")
-                self.exporter.export(videos)
-            
-            if videos is not None:
-                self.logger.info(f"Extracted {len(videos)} unique video links")
-
-         
-        elif args.command == 'url':
-            self.logger.info(f"Extracting videos from URL: {args.url}")
-            videos = self.extractor.extract_videos_from_urls([args.url])
-            
-            self.logger.info(f"Extracted {len(videos)} video links")
-
-        self.logger.info(f"Downloading videos ...")
-        for video in videos:
-            try:
-                self.logger.info(f"Downloading {video.title} via {video.url}...")
-                self.downloader.download_video(
-                    video.url, 
-                    video.title, 
-                    destination_folder=str(dest_path)
-                )
-            except subprocess.CalledProcessError as e:
-                self.logger.error(f"Failed to download video {video.title} from {video.url}: {e}")
+        # Extract videos
+        videos = self._extract_videos(args.command, args)
+        
+        # Download videos
+        if videos:
+            self._download_videos(videos, dest_path)
         
         self.logger.info("Application execution completed")
         return 0
