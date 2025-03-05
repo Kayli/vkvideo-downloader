@@ -10,6 +10,20 @@ from .logger import Logger
 from .browser import Browser
 from .settings import Settings
 
+class VideoDTO:
+    def __init__(self, url: str, title: str):
+        self.url = url
+        self.title = title
+
+    def __repr__(self):
+        return f"VideoDTO(url={self.url}, title={self.title})"
+
+    def __eq__(self, other):
+        if not isinstance(other, VideoDTO):
+            return NotImplemented
+        return self.url == other.url and self.title == other.title
+
+
 class Extractor:
     """
     A class for extracting video links from web pages.
@@ -36,7 +50,7 @@ class Extractor:
         self.logger = logger or Logger()
         self.browser = browser or Browser(self.settings)
 
-    def extract_video_links(self, url: str) -> List[Dict[str, str]]:
+    def extract_video_links(self, url: str) -> List[VideoDTO]:
         """
         Extract video links from a given VK video page.
         
@@ -44,7 +58,7 @@ class Extractor:
             url (str): URL of the VK video page
         
         Returns:
-            List[Dict[str, str]]: List of video links with their titles
+            List[VideoDTO]: List of VideoDTOs containing video URLs and titles
         
         Raises:
             TimeoutError: If page load or video extraction times out
@@ -61,6 +75,7 @@ class Extractor:
             
             # Find all video links
             video_links = []
+            extracted_videos = []
             for link in soup.find_all('a', href=re.compile(r'^/video-')):
                 href = link.get('href')
                 title = link.get_text(strip=True) or 'Untitled Video'
@@ -73,10 +88,12 @@ class Extractor:
                 # Convert to full URL
                 full_url = f'https://vkvideo.ru{href}'
                 
-                video_links.append({
-                    'url': full_url,
-                    'title': title
-                })
+                extracted_videos.append({'url': full_url, 'title': title})
+            
+            for video in extracted_videos:
+                url = video['url']
+                title = video['title']
+                video_links.append(VideoDTO(url, title))
             
             self.logger.info(f"Extracted {len(video_links)} unique video links")
             return video_links
@@ -89,7 +106,7 @@ class Extractor:
             self.logger.error(f"Error extracting video links: {e}")
             raise
 
-    def extract_videos_from_urls(self, urls: List[str]) -> List[Dict[str, str]]:
+    def extract_videos_from_urls(self, urls: List[str]) -> List[VideoDTO]:
         """
         Extract video links from multiple URLs.
         
@@ -97,7 +114,7 @@ class Extractor:
             urls (List[str]): List of URLs to extract videos from
         
         Returns:
-            List[Dict[str, str]]: Consolidated list of video links
+            List[VideoDTO]: Consolidated list of video links
         
         Raises:
             Exception: If any URL fails to extract videos

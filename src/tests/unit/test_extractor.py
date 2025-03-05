@@ -65,6 +65,6 @@ def test_title_extraction(test_url):
     video_links = extractor.extract_video_links(test_url)
 
     for video in video_links:
-        title = video['title']  # Access the title from the dictionary
+        title = video.title  # Access the title using the attribute
         assert title, f"Title is empty or None for video: {video}"
         assert not is_timestamp(title), f"Detected timestamp instead of title: {title}"  
