@@ -5,6 +5,7 @@ import os
 import yaml
 import tempfile
 import unittest.mock
+import re
 
 from ...app.cli_app import CLIApp, GOODSTUFF_VIDEOS
 from ...app.exporter import OUTPUT_YAML_FILE
@@ -43,14 +44,31 @@ def test_goodstuff_list_command(tmp_path):
     # Verify the log messages
     assert any("Extracting videos from predefined URLs" in log for log in app.logger.captured_logs['info']), "Should log URL extraction"
     assert any("Saving extracted links to" in log for log in app.logger.captured_logs['info']), "Should log YAML export"
-    assert any("Extracted" in log for log in app.logger.captured_logs['info']), "Should log number of extracted videos"
+    logs_with_video_links = [log for log in app.logger.captured_logs['info'] if re.search(r"Extracted \d+ unique video links", log)]
+    assert len(logs_with_video_links) > 0, "Should log number of extracted videos"
 
-#@pytest.mark.skip(reason="Test implementation removed")
 def test_goodstuff_command():
     """
     Test the goodstuff command without --list
     """
-    pass
+    # Create a test CLIApp with mock dependencies
+    app = CLIAppTestFactory.create_cli_app()
+
+    # Capture the stdout
+    captured_stdout = io.StringIO()
+    sys.stdout = captured_stdout
+
+    # Run the command without arguments
+    app.run(['goodstuff'])
+
+    # Reset the stdout
+    sys.stdout = sys.__stdout__
+
+    # Check if the expected output or log messages are generated
+    assert "Application started with command: goodstuff" in app.logger.captured_logs['info'][0], "Should log application start"
+    assert "Extracting videos from predefined URLs" in app.logger.captured_logs['info'][1], "Should log URL extraction"
+    logs_with_video_links = [log for log in app.logger.captured_logs['info'] if re.search(r"Extracted \d+ unique video links", log)]
+    assert len(logs_with_video_links) > 0, "Should log number of extracted videos"
 
 @pytest.mark.skip(reason="Test implementation removed")
 def test_no_arguments():
