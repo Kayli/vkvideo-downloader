@@ -76,13 +76,16 @@ class CLIApp:
         
         return parser
 
-    def run(self, cli_args: Optional[List[str]] = None) -> None:
+    def run(self, cli_args: Optional[List[str]] = None) -> int:
         """
         Main entry point for the VK Video Link Downloader.
         
         Args:
             cli_args (Optional[List[str]], optional): Command-line arguments. 
                 Defaults to sys.argv[1:] if not provided.
+        
+        Returns:
+            int: Exit code
         """
         # Use provided arguments or default to system arguments
         if cli_args is None:
@@ -94,7 +97,7 @@ class CLIApp:
         # If no arguments, print help and exit
         if len(cli_args) == 0:
             parser.print_help(sys.stderr)
-            sys.exit(1)
+            return 1
         
         # Parse arguments
         args = parser.parse_args(cli_args)
@@ -120,3 +123,4 @@ class CLIApp:
             self.logger.info(f"Extracted {len(videos)} video links")
         
         self.logger.info("Application execution completed")
+        return 0

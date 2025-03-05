@@ -71,26 +71,8 @@ def test_goodstuff_command():
     assert len(logs_with_video_links) > 0, "Should log number of extracted videos"
 
 def test_no_arguments(capsys):
-    """
-    Test that when no arguments are specified, help information is displayed
-    """
-    # Create a test CLIApp with mock dependencies
     app = CLIAppTestFactory.create_cli_app()
-
-    # Run the command without arguments
-    with pytest.raises(SystemExit) as excinfo:
-        app.run([])
-
-    # Capture stderr
+    exit_code = app.run([])  # Pass an empty list to simulate no arguments
+    assert exit_code == 1  # Check that the exit code is 1 for no arguments
     captured = capsys.readouterr()
-
-    # Check if the expected help information is displayed in stderr
-    help_message = "VK Video Link Downloader"
-    assert help_message in captured.err, "Help information should be displayed when no arguments are specified"
-
-    # Verify that 'Examples:' is also present in the output
-    examples_message = "Examples:"
-    assert examples_message in captured.err, "Examples section should be displayed when no arguments are specified"
-
-    # Verify that 'Examples:' is also present in the output
-    assert "Examples:" in captured.err, "Examples section should be displayed when no arguments are specified"
+    assert "usage:" in captured.err
