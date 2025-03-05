@@ -4,7 +4,7 @@ import os
 from ..fakes.capture_logger import CaptureLogger
 from ...app.settings import Settings
 from ...app.browser import Browser
-from ...app.extractor import Extractor
+from ...app.extractor import Extractor, is_timestamp
 
 @pytest.fixture
 def test_url():
@@ -67,10 +67,3 @@ def test_title_extraction(test_url):
     for video in video_links:
         title = video['title']  # Access the title from the dictionary
         assert not is_timestamp(title), f"Detected timestamp instead of title: {title}"  
-
-
-def is_timestamp(title):
-    # Simple regex to check if the title matches a timestamp format
-    import re
-    timestamp_pattern = re.compile(r'^(\d{1,2}:\d{2}:\d{2}|\d{1,2}:\d{2})$')
-    return bool(timestamp_pattern.match(title))
