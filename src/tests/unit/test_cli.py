@@ -45,7 +45,7 @@ def test_goodstuff_list_command(tmp_path):
     assert any("Saving extracted links to" in log for log in app.logger.captured_logs['info']), "Should log YAML export"
     assert any("Extracted" in log for log in app.logger.captured_logs['info']), "Should log number of extracted videos"
 
-@pytest.mark.skip(reason="Test implementation removed")
+#@pytest.mark.skip(reason="Test implementation removed")
 def test_goodstuff_command():
     """
     Test the goodstuff command without --list
