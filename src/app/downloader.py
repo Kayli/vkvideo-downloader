@@ -1,11 +1,12 @@
 import subprocess
 import json
 from pathlib import Path
+from typing import Optional
 from .logger import Logger
 
 class Downloader:
-    def __init__(self, logger: Logger):
-        self.logger = logger
+    def __init__(self, logger: Optional[Logger] = None):
+        self.logger = logger or Logger()
 
     def _build_base_command(self, url: str, desired_filename: str, low_res: bool = False) -> list:
         """
