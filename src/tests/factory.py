@@ -1,6 +1,5 @@
 from typing import Optional
 import logging
-import yaml
 
 from ..app.exporter import VideoLinkExporter, OUTPUT_YAML_FILE
 from ..app.extractor import Extractor
@@ -39,7 +38,6 @@ class CLIAppTestFactory:
             def __init__(self, output_file=OUTPUT_YAML_FILE):
                 super().__init__()
                 self.exported_links = []
-                self.output_file = output_file
 
             def export(self, links):
                 """
@@ -49,10 +47,6 @@ class CLIAppTestFactory:
                     links (List[str]): Video links to export
                 """
                 self.exported_links.extend(links)
-                
-                # Write to the specified output file
-                with open(self.output_file, 'w', encoding='utf-8') as f:
-                    yaml.safe_dump(links, f, allow_unicode=True)
 
         class FakeExtractor(Extractor):
             """
