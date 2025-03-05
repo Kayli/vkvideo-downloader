@@ -7,7 +7,7 @@ import tempfile
 import unittest.mock
 import re
 
-from ...app.cli_app import CLIApp, GOODSTUFF_VIDEOS
+from ...app.cli_app import CLIApp, GOODSTUFF_VIDEOS, ExitCode
 from ...app.exporter import VideoLinkExporter
 from ..unit.factory import CLIAppTestFactory
 
@@ -54,6 +54,6 @@ def test_goodstuff_command():
 def test_no_arguments(capsys):
     app = CLIAppTestFactory.create_cli_app()
     exit_code = app.run([])  # Pass an empty list to simulate no arguments
-    assert exit_code == 1  # Check that the exit code is 1 for no arguments
+    assert exit_code == ExitCode.INVALID_USAGE  # Check that the exit code is INVALID_USAGE for no arguments
     captured = capsys.readouterr()
     assert "usage:" in captured.err

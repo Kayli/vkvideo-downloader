@@ -1,16 +1,17 @@
 - project uses poetry as venv and dependency manager
 
-- avoid using cd command and assume we are in the project root
+- assume we are in the project root and avoid using cd command
 
-- project uses just as task runner (justfile)
+- project uses "just" as task runner (justfile)
     - use "just test" command to run all tests
+    - use "just test-unit" command to run only unit tests
 
-- git stage and commit with a on-liner git add . && git commit -m "<COMMIT-MESSAGE>"
+- staging and committing changes
+    - stage and commit with a one-liner command "git add . && git commit -m "<MSG>"
     - check changes with diff before generating commit message
 
-- after a code change, run tests with "just test-unit" to make sure you didn't break annything
-
-- before commit, run tests with "just test" command to ensure you didn't break anything
+- after a code change, run unit tests to make sure you didn't break anything
+    - run "just test-unit" command
 
 - we are using constructor injection and factories for all dependencies
 - we are using test doubles for most testing and mocking

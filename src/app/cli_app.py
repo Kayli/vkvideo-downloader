@@ -3,6 +3,7 @@ import sys
 import yaml
 import argparse
 import subprocess
+from enum import IntEnum
 from typing import List, Optional
 from pathlib import Path
 
@@ -16,6 +17,20 @@ GOODSTUFF_VIDEOS = [
     "https://vkvideo.ru/@public111751633/all",
     "https://vkvideo.ru/@club180058315/all"
 ]
+
+class ExitCode(IntEnum):
+    """
+    Enum representing exit codes for the CLI application.
+    
+    Follows standard Unix/Linux exit code conventions with some application-specific additions.
+    """
+    SUCCESS = 0
+    GENERAL_ERROR = 1
+    MISUSE_OF_SHELL_BUILTIN = 2
+    INVALID_USAGE = 64
+    DESTINATION_ERROR = 73  # Data error
+    DOWNLOAD_ERROR = 74     # Input/output error
+    CONFIG_ERROR = 78       # Configuration error
 
 class CLIApp:
     """
@@ -149,13 +164,16 @@ class CLIApp:
 
         return None
 
-    def _download_videos(self, videos: List, dest_path: Path) -> None:
+    def _download_videos(self, videos: List, dest_path: Path) -> ExitCode:
         """
         Download videos to the specified destination.
 
         Args:
             videos (List): List of videos to download
             dest_path (Path): Destination path for downloads
+
+        Returns:
+            ExitCode: Status of the download operation
         """
         self.logger.info(f"Downloading videos ...")
         for video in videos:
@@ -168,8 +186,11 @@ class CLIApp:
                 )
             except subprocess.CalledProcessError as e:
                 self.logger.error(f"Failed to download video {video.title} from {video.url}: {e}")
+                return ExitCode.DOWNLOAD_ERROR
+        
+        return ExitCode.SUCCESS
 
-    def run(self, cli_args: Optional[List[str]] = None) -> int:
+    def run(self, cli_args: Optional[List[str]] = None) -> ExitCode:
         """
         Main entry point for the VK Video Link Downloader.
         
@@ -178,7 +199,7 @@ class CLIApp:
                 Defaults to sys.argv[1:] if not provided.
         
         Returns:
-            int: Exit code
+            ExitCode: Exit code representing the result of the application execution
         """
         # Use provided arguments or default to system arguments
         if cli_args is None:
@@ -190,7 +211,7 @@ class CLIApp:
         # If no arguments, print help and exit
         if len(cli_args) == 0:
             parser.print_help(sys.stderr)
-            return 1
+            return ExitCode.INVALID_USAGE
         
         # Parse arguments
         args = parser.parse_args(cli_args)
@@ -200,14 +221,16 @@ class CLIApp:
         # Validate destination directory
         dest_path = Path(args.destination).resolve()
         if not self._validate_destination(dest_path):
-            return 1
+            return ExitCode.DESTINATION_ERROR
 
         # Extract videos
         videos = self._extract_videos(args.command, args)
         
         # Download videos
         if videos:
-            self._download_videos(videos, dest_path)
+            download_status = self._download_videos(videos, dest_path)
+            if download_status != ExitCode.SUCCESS:
+                return download_status
         
         self.logger.info("Application execution completed")
-        return 0
+        return ExitCode.SUCCESS
