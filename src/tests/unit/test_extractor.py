@@ -57,3 +57,20 @@ def test_logging_for_second_run(test_url):
     extractor2.extract_video_links(test_url)
     assert len(logger.captured_logs['info']) > 0, "Should have info logs"
     assert any("Extracted" in log for log in logger.captured_logs['info']), "Should log URL processing"
+
+
+def test_title_extraction(test_url):
+    settings, logger, browser = setup_test_environment()
+    extractor = Extractor(settings=settings, browser=browser, logger=logger)
+    video_links = extractor.extract_video_links(test_url)
+
+    for video in video_links:
+        title = video['title']  # Access the title from the dictionary
+        assert not is_timestamp(title), f"Detected timestamp instead of title: {title}"  
+
+
+def is_timestamp(title):
+    # Simple regex to check if the title matches a timestamp format
+    import re
+    timestamp_pattern = re.compile(r'^(\d{1,2}:\d{2}:\d{2}|\d{1,2}:\d{2})$')
+    return bool(timestamp_pattern.match(title))
