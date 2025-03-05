@@ -7,13 +7,13 @@ default:
 # Run all tests
 test: test-unit && test-live
 
-# Run live tests
-test-live:
-    poetry run pytest src/tests/test_live.py
-
 # Run unit tests
 test-unit:
     poetry run pytest src/tests/unit
+
+# Run live tests
+test-live:
+    poetry run pytest src/tests/live
 
 # Run the main application script
 run:

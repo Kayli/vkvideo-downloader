@@ -1,6 +1,6 @@
 import pytest
-from ..app.settings import Settings
-from ..app.browser import Browser
+from ...app.settings import Settings
+from ...app.browser import Browser
 import os
 
 @pytest.fixture
@@ -9,8 +9,8 @@ def test_url():
 
 def test_browser_record_replay(test_url, tmp_path):
     """Test the record and replay functionality of Browser."""
-    from ..app.settings import Settings
-    from ..app.browser import Browser
+    from ...app.settings import Settings
+    from ...app.browser import Browser
     import os
 
     # Create settings with custom cache directory
@@ -34,8 +34,8 @@ def test_browser_record_replay(test_url, tmp_path):
 
 def test_browser_record_replay(test_url, tmp_path):
     """Test the record and replay functionality of Browser."""
-    from ..app.settings import Settings
-    from ..app.browser import Browser
+    from ...app.settings import Settings
+    from ...app.browser import Browser
     import os
 
     # Create settings with custom cache directory

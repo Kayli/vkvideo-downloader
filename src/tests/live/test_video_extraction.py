@@ -1,6 +1,6 @@
 import pytest
-from ..app.factory import CLIAppFactory
-from src.tests.fakes.capture_logger import CaptureLogger
+from ...app.factory import CLIAppFactory
+from ..unit.fakes.capture_logger import CaptureLogger
 
 @pytest.fixture
 def test_url():
