@@ -6,6 +6,7 @@
     - use "just test" command to run all tests
 
 - git stage and commit with a on-liner git add . && git commit -m "<COMMIT-MESSAGE>"
+    - check changes with diff before generating commit message
 
 - after a code change, run tests with "just test-unit" to make sure you didn't break annything
 

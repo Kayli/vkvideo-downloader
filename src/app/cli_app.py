@@ -6,6 +6,7 @@ from typing import List, Optional
 
 from .extractor import Extractor
 from .exporter import VideoLinkExporter, OUTPUT_YAML_FILE
+from .downloader import Downloader
 from .logger import Logger
 
 # Constants
@@ -22,6 +23,7 @@ class CLIApp:
         self, 
         exporter: Optional[VideoLinkExporter] = None,
         extractor: Optional[Extractor] = None,
+        downloader: Optional[Downloader] = None,
         logger: Optional[Logger] = None
     ):
         """
@@ -32,12 +34,15 @@ class CLIApp:
                 Defaults to a new VideoLinkExporter with default settings.
             extractor (Optional[Extractor], optional): Extractor for extracting video links.
                 Defaults to a new Extractor instance.
+            downloader (Optional[Downloader], optional): Downloader for downloading videos.
+                Defaults to a new Downloader instance.
             logger (Optional[Logger], optional): Logger for recording application events.
                 Defaults to a new Logger instance.
         """
         self.videos = GOODSTUFF_VIDEOS
         self.exporter = exporter or VideoLinkExporter()
         self.extractor = extractor or Extractor()
+        self.downloader = downloader or Downloader()
         self.logger = logger or Logger()
 
     def create_parser(self) -> argparse.ArgumentParser:
@@ -114,13 +119,18 @@ class CLIApp:
             
             if videos is not None:
                 self.logger.info(f"Extracted {len(videos)} unique video links")
-                print(yaml.safe_dump(videos, allow_unicode=True))
+
         
         elif args.command == 'url':
             self.logger.info(f"Extracting videos from URL: {args.url}")
             videos = self.extractor.extract_videos_from_urls([args.url])
             
             self.logger.info(f"Extracted {len(videos)} video links")
+
+        #self.logger.info(f"Downloading videos ...")
+        #for video in videos:
+        #    self.logger.info(f"Downloading {video.title} via {video.url}...")
+        #    self.downloader.download_video(video.url, video.title)
         
         self.logger.info("Application execution completed")
         return 0
