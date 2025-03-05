@@ -16,9 +16,7 @@ dependencies = [
 
 [project.optional-dependencies]
 test = [
-    "pytest (>=7.3.1,<8.0.0)",
     "pytest-cov (>=4.0.0,<5.0.0)",
-    "pytest-timeout (>=2.1.0,<3.0.0)"
 ]
 
 [build-system]
@@ -33,7 +31,10 @@ python = "^3.11"
 playwright = "^1.41.2"
 pyyaml = "^6.0.1"
 typing = "^3.7.4"
-pytest-timeout = "^2.1.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.5"
+pytest-timeout = "^2.3.1"
 
 [tool.poetry.scripts]
 vkvideo = "src.main:main"
