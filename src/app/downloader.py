@@ -81,6 +81,10 @@ class Downloader:
         Raises:
             Exception: If the download fails
         """
+        # If no destination folder is specified, use current working directory
+        if destination_folder is None:
+            destination_folder = str(Path.cwd())
+        
         # Prepare yt-dlp options
         ydl_opts = self._get_ydl_opts(url, desired_filename, low_res, destination_folder)
         

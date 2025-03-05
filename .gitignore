@@ -60,3 +60,7 @@ video_links.yml
 
 # Recordings
 ./recordings/
+
+# downloads
+*.mp4
+*.mp4.part
