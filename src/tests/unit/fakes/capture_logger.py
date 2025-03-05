@@ -1,5 +1,6 @@
 import logging
-from src.app.logger import Logger
+import sys
+from ....app.logger import Logger
 
 class CaptureLogger(Logger):
     """
@@ -24,11 +25,13 @@ class CaptureLogger(Logger):
         """Capture info log messages."""
         self.captured_logs['info'].append(msg)
         super().info(msg)
+        print(f'INFO: {msg}')  # Print to stdout
     
     def error(self, msg):
         """Capture error log messages."""
         self.captured_logs['error'].append(msg)
         super().error(msg)
+        print(f'ERROR: {msg}', file=sys.stderr)  # Print to stderr
     
     def clear_logs(self):
         """Clear all captured logs."""

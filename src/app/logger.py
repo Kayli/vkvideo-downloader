@@ -39,3 +39,7 @@ class Logger:
     def warning(self, msg):
         """Log a warning message."""
         self._logger.warning(msg)
+
+    def debug(self, msg):
+        """Log a debug message."""
+        self._logger.debug(msg)
