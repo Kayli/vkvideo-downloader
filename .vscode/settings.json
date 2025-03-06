@@ -3,5 +3,10 @@
       "**/__pycache__": true,
       "**/.pytest_cache": true,
       "**/__init__.py": true // comment out if you miss __init__.py noise
-    }
+    },
+    "python.testing.pytestArgs": [
+      "src"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
 }

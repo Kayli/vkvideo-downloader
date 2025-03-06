@@ -12,7 +12,7 @@ dependencies = [
     "yt-dlp (>=2025.2.19,<2026.0.0)",
     "pyyaml (>=6.0,<7.0)",
     "beautifulsoup4 (>=4.13.3,<5.0.0)",
-    "secretstorage (>=3.3.3,<4.0.0)"
+    "secretstorage (>=3.3.3,<4.0.0)",
 ]
 
 [project.optional-dependencies]
