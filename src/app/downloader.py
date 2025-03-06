@@ -1,6 +1,6 @@
 import yt_dlp
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List, Union
 from .logger import Logger
 
 class Downloader:
@@ -103,3 +103,31 @@ class Downloader:
         except Exception as e:
             self.logger.error(f"Download failed: {e}")
             raise
+
+    def download_videos(self, videos: List, destination_folder: Optional[str] = None, skip: List = []) -> None:
+        """
+        Download multiple videos to the specified destination.
+
+        Args:
+            videos (List): List of videos to download, each with url and title attributes
+            destination_folder (str, optional): Folder to save the videos. Defaults to None.
+            skip (List, optional): List of videos to skip downloading. Defaults to an empty list.
+        """
+        self.logger.info(f"Downloading {len(videos)} videos ...")
+        
+        for video in videos:
+            # Skip video if it's in the skip collection
+            if video in skip:
+                self.logger.info(f"Skipping video {video.title} as it is in the skip collection...")
+                continue
+
+            try:
+                self.logger.info(f"Downloading {video.title} via {video.url}...")
+                self.download_video(
+                    video.url, 
+                    video.title, 
+                    destination_folder=destination_folder
+                )
+            except Exception as e:
+                self.logger.error(f"Failed to download video {video.title} from {video.url}: {e}")
+                raise

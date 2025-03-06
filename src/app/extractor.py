@@ -4,6 +4,7 @@ import logging
 from typing import List, Dict, Optional
 from bs4 import BeautifulSoup
 import re
+import yaml
 
 # Import Logger class
 from .logger import Logger
@@ -49,6 +50,53 @@ class Extractor:
         self.settings = settings or Settings()
         self.logger = logger or Logger()
         self.browser = browser or Browser(self.settings)
+        self.cache_dir = os.path.expanduser('~/.cache/vkvideo')
+        os.makedirs(self.cache_dir, exist_ok=True)
+
+
+    def extract_video_links_cached(self, url: str) -> List[VideoDTO]:
+        """
+        Extract video links from a given VK video page, using cached links if available.
+        
+        Args:
+            url (str): URL of the VK video page
+        
+        Returns:
+            List[VideoDTO]: List of VideoDTOs containing video URLs and titles
+        
+        Raises:
+            TimeoutError: If page load or video extraction times out
+            Exception: For other unexpected errors during extraction
+        """
+        # Create cache filename based on URL hash
+        import hashlib
+        cache_filename = os.path.join(self.cache_dir, hashlib.md5(url.encode()).hexdigest() + '.yaml')
+        
+        # Check if cache file exists
+        if os.path.exists(cache_filename):
+            self.logger.info(f"Using cached links for {url}")
+            with open(cache_filename, 'r') as f:
+                cached_videos = yaml.safe_load(f)
+            
+            # Convert cached data to VideoDTO
+            video_links = [VideoDTO(video['url'], video['title']) for video in cached_videos]
+            self.logger.info(f"Found {len(video_links)} videos in cache")
+            return video_links
+        
+        self.logger.info(f"No cache found for {url}. Extracting video links using browser.")
+        video_links = self.extract_video_links(url)
+        
+        # Cache the extracted links
+        if video_links:
+            cached_data = [{'url': video.url, 'title': video.title} for video in video_links]
+            with open(cache_filename, 'w') as f:
+                yaml.safe_dump(cached_data, f)
+            self.logger.info(f"Cached {len(video_links)} video links for {url}")
+        else:
+            self.logger.warning(f"No videos found to cache for {url}")
+        
+        return video_links
+
 
     def extract_video_links(self, url: str) -> List[VideoDTO]:
         """
@@ -106,9 +154,10 @@ class Extractor:
             self.logger.error(f"Error extracting video links: {e}")
             raise
 
-    def extract_videos_from_urls(self, urls: List[str]) -> List[VideoDTO]:
+
+    def extract_videos_from_urls_cached(self, urls: List[str]) -> List[VideoDTO]:
         """
-        Extract video links from multiple URLs.
+        Extract video links from multiple URLs using cached extraction method.
         
         Args:
             urls (List[str]): List of URLs to extract videos from
@@ -122,10 +171,14 @@ class Extractor:
         all_videos = []
         for url in urls:
             self.logger.info(f"Processing URL: {url}")
-            videos = self.extract_video_links(url)
+            videos = self.extract_video_links_cached(url)
             all_videos.extend(videos)
         
+        # Log number of extracted videos
+        self.logger.info(f"Extracted {len(all_videos)} unique video links")
+        
         return all_videos
+
 
 
 def is_timestamp(title):

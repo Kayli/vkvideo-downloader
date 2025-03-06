@@ -38,7 +38,7 @@ pytest = "^8.3.5"
 pytest-timeout = "^2.3.1"
 
 [tool.poetry.scripts]
-vkvideo = "src.main:main"
+vkvideo = "src.app.main:main"
 
 [tool.pytest.ini_options]
 testpaths = [

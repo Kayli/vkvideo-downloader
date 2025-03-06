@@ -7,8 +7,8 @@
     - use "just test-unit" command to run only unit tests
 
 - staging and committing changes
+    - when asked to commit changes, first fun diff command and then create a commit message that summarizes the changes
     - stage and commit with a one-liner command "git add . && git commit -m "<MSG>"
-    - check changes with diff before generating commit message
 
 - after a code change, run unit tests to make sure you didn't break anything
     - run "just test-unit" command

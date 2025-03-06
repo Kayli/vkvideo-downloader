@@ -10,6 +10,7 @@ from pathlib import Path
 from .extractor import Extractor
 from .downloader import Downloader
 from .logger import Logger
+from .settings import Settings
 
 # Constants
 GOODSTUFF_VIDEOS = [
@@ -17,19 +18,9 @@ GOODSTUFF_VIDEOS = [
     "https://vkvideo.ru/@club180058315/all"
 ]
 
-class ExitCode(IntEnum):
-    """
-    Enum representing exit codes for the CLI application.
-    
-    Follows standard Unix/Linux exit code conventions with some application-specific additions.
-    """
-    SUCCESS = 0
-    GENERAL_ERROR = 1
-    MISUSE_OF_SHELL_BUILTIN = 2
-    INVALID_USAGE = 64
-    DESTINATION_ERROR = 73  # Data error
-    DOWNLOAD_ERROR = 74     # Input/output error
-    CONFIG_ERROR = 78       # Configuration error
+class CLIAppError(Exception):
+    """Base exception for CLIApp errors"""
+    pass
 
 class CLIApp:
     """
@@ -37,25 +28,25 @@ class CLIApp:
     """
     def __init__(
         self, 
-        extractor: Optional[Extractor] = None,
-        downloader: Optional[Downloader] = None,
-        logger: Optional[Logger] = None
+        extractor: Extractor, 
+        downloader: Downloader, 
+        logger: Logger, 
+        settings: Settings
     ):
         """
-        Initialize the CLIApp.
+        Initialize the CLI application
 
         Args:
-            extractor (Optional[Extractor], optional): Extractor for extracting video links.
-                Defaults to a new Extractor instance.
-            downloader (Optional[Downloader], optional): Downloader for downloading videos.
-                Defaults to a new Downloader instance.
-            logger (Optional[Logger], optional): Logger for recording application events.
-                Defaults to a new Logger instance.
+            extractor (Extractor): Video link extractor
+            downloader (Downloader): Video downloader
+            logger (Logger): Logging utility
+            settings (Settings): Application settings
         """
         self.videos = GOODSTUFF_VIDEOS
-        self.extractor = extractor or Extractor()
-        self.downloader = downloader or Downloader()
-        self.logger = logger or Logger()
+        self.extractor = extractor
+        self.downloader = downloader
+        self.logger = logger
+        self.settings = settings
 
     def create_parser(self) -> argparse.ArgumentParser:
         """
@@ -102,64 +93,72 @@ class CLIApp:
         
         return parser
 
-    def _validate_destination(self, dest_path: Path) -> bool:
+    def _validate_destination_path(self, destination: Optional[str]) -> Path:
         """
-        Validate the destination directory.
+        Validate and prepare destination path for video downloads
 
         Args:
-            dest_path (Path): Path to the destination directory
+            destination (Optional[str]): Destination path for downloads
 
         Returns:
-            bool: True if destination is valid, False otherwise
+            Path: Validated and absolute path to destination
+        
+        Raises:
+            CLIAppError: If destination path is invalid or cannot be created
         """
-        if not dest_path.exists():
-            self.logger.error(f"Destination directory does not exist: {dest_path}")
-            return False
-        if not dest_path.is_dir():
-            self.logger.error(f"Destination is not a directory: {dest_path}")
-            return False
-        return True
+        # Use current directory if no destination specified
+        if destination is None:
+            destination = '.'
+        
+        # Convert to absolute path and expand user
+        dest_path = Path(destination).expanduser().resolve()
 
-    def _extract_videos(self, command: str, args) -> Optional[List]:
+        # Create directory if it doesn't exist
+        try:
+            dest_path.mkdir(parents=True, exist_ok=True)
+        except (PermissionError, OSError) as e:
+            raise CLIAppError(f"Cannot create destination directory: {dest_path}. {str(e)}")
+
+        # Check if path is writable
+        if not os.access(dest_path, os.W_OK):
+            raise CLIAppError(f"Destination path is not writable: {dest_path}")
+
+        return dest_path
+
+    def _get_vk_video_page_urls(self, args) -> List[str]:
         """
-        Extract videos based on the command.
+        Get VK video page URLs from command arguments
 
         Args:
-            command (str): The command ('goodstuff' or 'url')
-            args: Parsed command-line arguments
+            args (argparse.Namespace): Parsed command arguments
 
         Returns:
-            Optional[List]: List of extracted videos or None
+            List[str]: List of VK video page URLs
+        
+        Raises:
+            CLIAppError: If no URLs are provided and not in goodstuff mode
         """
-        if command == 'goodstuff':
-            self.logger.info(f"Extracting videos from predefined URLs: {self.videos}")
-            videos = self.extractor.extract_videos_from_urls(self.videos)
-            
-            if videos is not None:
-                self.logger.info(f"Extracted {len(videos)} unique video links")
-            
-            return videos
+        # Goodstuff mode with predefined URLs
+        if args.command == 'goodstuff':
+            self.logger.info("Extracting videos from predefined URLs")
+            return self.videos
 
-        elif command == 'url':
-            self.logger.info(f"Extracting videos from URL: {args.url}")
-            videos = self.extractor.extract_videos_from_urls([args.url])
-            
-            self.logger.info(f"Extracted {len(videos)} video links")
-            
-            return videos
+        # Use provided URLs
+        if not args.url:
+            raise CLIAppError("No VK video URLs provided. Use --urls or 'goodstuff' command.")
 
-        return None
+        return [args.url]
 
-    def _download_videos(self, videos: List, dest_path: Path) -> ExitCode:
+    def _download_videos(self, videos: List, dest_path: Path) -> None:
         """
         Download videos to the specified destination.
 
         Args:
             videos (List): List of videos to download
             dest_path (Path): Destination path for downloads
-
-        Returns:
-            ExitCode: Status of the download operation
+        
+        Raises:
+            CLIAppError: If download fails
         """
         self.logger.info(f"Downloading videos ...")
         for video in videos:
@@ -171,21 +170,17 @@ class CLIApp:
                     destination_folder=str(dest_path)
                 )
             except subprocess.CalledProcessError as e:
-                self.logger.error(f"Failed to download video {video.title} from {video.url}: {e}")
-                return ExitCode.DOWNLOAD_ERROR
-        
-        return ExitCode.SUCCESS
+                raise CLIAppError(f"Failed to download video {video.title} from {video.url}: {e}")
 
-    def run(self, cli_args: Optional[List[str]] = None) -> ExitCode:
+    def run(self, cli_args: Optional[List[str]] = None) -> None:
         """
         Main entry point for the VK Video Link Downloader.
         
         Args:
-            cli_args (Optional[List[str]], optional): Command-line arguments. 
-                Defaults to sys.argv[1:] if not provided.
+            cli_args (Optional[List[str]], optional): Command-line arguments. Defaults to None.
         
-        Returns:
-            ExitCode: Exit code representing the result of the application execution
+        Raises:
+            CLIAppError: For various application-level errors
         """
         # Use provided arguments or default to system arguments
         if cli_args is None:
@@ -197,7 +192,7 @@ class CLIApp:
         # If no arguments, print help and exit
         if len(cli_args) == 0:
             parser.print_help(sys.stderr)
-            return ExitCode.INVALID_USAGE
+            raise CLIAppError("No arguments provided")
         
         # Parse arguments
         args = parser.parse_args(cli_args)
@@ -205,18 +200,19 @@ class CLIApp:
         self.logger.info(f"Application started with command: {args.command}")
         
         # Validate destination directory
-        dest_path = Path(args.destination).resolve()
-        if not self._validate_destination(dest_path):
-            return ExitCode.DESTINATION_ERROR
+        dest_path = self._validate_destination_path(args.destination)
 
-        # Extract videos
-        videos = self._extract_videos(args.command, args)
+        # Gets video URLs from command line or from goodstuff hardcoded list
+        videopage_urls = self._get_vk_video_page_urls(args)
+
+        # Extracts video URLs from the vk videos pages or from cache
+        videos_cached = self.extractor.extract_videos_from_urls_cached(videopage_urls)
         
         # Download videos
-        if videos:
-            download_status = self._download_videos(videos, dest_path)
-            if download_status != ExitCode.SUCCESS:
-                return download_status
+        self.downloader.download_videos(videos_cached, str(dest_path))
+
+        # Check for videos that are not in the cache and download them if there are any
+        videos_not_in_cache = self.extractor.extract_videos_from_urls(videopage_urls)
+        self.downloader.download_videos(videos_not_in_cache, str(dest_path), skip=videos_cached)
         
         self.logger.info("Application execution completed")
-        return ExitCode.SUCCESS

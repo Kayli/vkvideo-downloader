@@ -1,12 +1,12 @@
-from typing import Optional
+from typing import Optional, List
 import logging
 from pathlib import Path
 
 from ...app.extractor import Extractor, VideoDTO
 from ...app.cli_app import CLIApp, GOODSTUFF_VIDEOS
 from ...app.logger import Logger
+from ...app.downloader import Downloader
 from ...app.settings import Settings
-from ...app.downloader import Downloader  # Import the Downloader class
 
 class CLIAppTestFactory:
     """
@@ -15,7 +15,9 @@ class CLIAppTestFactory:
     @staticmethod
     def create_cli_app(
         extractor: Optional[Extractor] = None,
-        logger: Optional[Logger] = None
+        logger: Optional[Logger] = None,
+        downloader: Optional[Downloader] = None,
+        settings: Optional[Settings] = None
     ):
         """
         Create a CLIApp instance with test dependencies
@@ -25,6 +27,10 @@ class CLIAppTestFactory:
                 Defaults to a fake Extractor for testing.
             logger (Optional[Logger], optional): Logger for recording application events.
                 Defaults to a fake Logger for testing.
+            downloader (Optional[Downloader], optional): Downloader for downloading videos.
+                Defaults to a fake Downloader for testing.
+            settings (Optional[Settings], optional): Application settings.
+                Defaults to a default Settings instance.
 
         Returns:
             CLIApp: Configured CLIApp instance
@@ -55,12 +61,40 @@ class CLIAppTestFactory:
                     for url in urls
                 ]
 
+            def extract_videos_from_urls_cached(self, urls=None):
+                """
+                Simulate cached video link extraction
+
+                Args:
+                    urls (Optional[List[str]], optional): URLs to extract from.
+                        Defaults to predefined videos.
+
+                Returns:
+                    List[VideoDTO]: Extracted video links
+                """
+                return self.extract_videos_from_urls(urls)
+
+            def extract_video_links_cached(self, url: str):
+                """
+                Simulate cached video link extraction for a single URL
+
+                Args:
+                    url (str): URL to extract from
+
+                Returns:
+                    List[VideoDTO]: Extracted video links
+                """
+                return [
+                    VideoDTO(url=f"{url}/video1", title=f"Video from {url}")
+                ]
+
         class FakeDownloader(Downloader):
             """
             A fake downloader for testing
             """
             def __init__(self, logger=None):
                 super().__init__(logger)
+                self.download_calls = 0
 
             def download_video(self, url: str, desired_filename: str, low_res: bool = False, destination_folder: Optional[str] = None) -> Path:
                 """
@@ -75,10 +109,31 @@ class CLIAppTestFactory:
                 Returns:
                     Path: Path to the simulated downloaded video
                 """
+                # Increment download call counter
+                self.download_calls += 1
+
                 # Create a mock path in the destination folder
                 if destination_folder is None:
                     destination_folder = '.'
                 return Path(destination_folder) / f"{desired_filename}.mp4"
+
+            def download_videos(self, videos: List, destination_folder: Optional[str] = None, skip: List = []) -> None:
+                """
+                Simulate downloading multiple videos
+
+                Args:
+                    videos (List): List of videos to download
+                    destination_folder (Optional[str], optional): Folder to save the videos. Defaults to None.
+                    skip (List, optional): List of videos to skip downloading. Defaults to an empty list.
+                """
+                # Simulate downloading each video
+                for video in videos:
+                    if video not in skip:
+                        self.download_video(
+                            video.url, 
+                            video.title, 
+                            destination_folder=destination_folder
+                        )
 
         class FakeLogger(Logger):
             """
@@ -101,6 +156,12 @@ class CLIAppTestFactory:
         # Use provided dependencies or create fake ones
         extractor = extractor or FakeExtractor()
         logger = logger or FakeLogger()
-        downloader = FakeDownloader(logger)
+        downloader = downloader or FakeDownloader(logger)
+        settings = settings or Settings()
 
-        return CLIApp(extractor=extractor, logger=logger, downloader=downloader)
+        return CLIApp(
+            extractor=extractor, 
+            logger=logger, 
+            downloader=downloader,
+            settings=settings
+        )
