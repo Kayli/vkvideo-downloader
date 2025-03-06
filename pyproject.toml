@@ -1,5 +1,5 @@
 [project]
-name = "vk-batch-downloader"
+name = "vkvideo"
 version = "0.1.0"
 description = "Download videos from VK (VKontakte) social network"
 authors = [
