@@ -3,10 +3,14 @@ import os, time
 from typing import Optional, List
 from pathlib import Path
 from .logger import Logger
+from .settings import Settings
 
 class Downloader:
-    def __init__(self, logger: Optional[Logger] = None):
+    def __init__(self,
+                 logger: Optional[Logger] = None,
+                 settings: Optional[Settings] = None):
         self.logger = logger or Logger()
+        self.settings = settings or Settings()
         self.download_link_selector = '#vkVideoDownloaderPanel > a:last-of-type'
         self.low_res_selector = '#vkVideoDownloaderPanel > a:first-of-type'
 

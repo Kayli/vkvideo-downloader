@@ -3,7 +3,7 @@ from enum import IntEnum
 from typing import Optional, List
 
 from .cli_app import CLIApp, CLIAppError
-from .factory import create_cli_app
+from .factory import Factory
 
 class ExitCode(IntEnum):
     """
@@ -25,7 +25,7 @@ def main():
     """
     try:
         # Use factory to create CLI app with dependencies
-        app = create_cli_app()
+        app = Factory.create_cli_app()
         
         # Get command-line arguments
         cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
