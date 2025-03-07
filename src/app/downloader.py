@@ -46,9 +46,9 @@ class Downloader:
                     f'--download-default-directory={download_path}'
                 ],
                 accept_downloads=True,
-                headless=False
+                headless=self.settings.headless
             )
-            context.set_default_timeout(settings.timeout_browser_sec * 1000)
+            context.set_default_timeout(self.settings.timeout_browser_sec * 1000)
             page = context.new_page()
             page.goto(url)
             
