@@ -44,6 +44,7 @@ class Downloader2:
                 accept_downloads=True,
                 headless=False
             )
+            context.set_default_timeout(60000) # 1 minute timeout
             page = context.new_page()
             page.goto(url)
             
