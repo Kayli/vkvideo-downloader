@@ -24,6 +24,14 @@ class Downloader2:
         path_to_extension = '/home/illiam/Downloads/VK-Video-Downloader-main/chromium'
         user_data_dir = os.path.expanduser("~/.config/chromium/")
         download_link_selector = self.low_res_selector if low_res else self.download_link_selector
+        if not desired_filename.endswith('.mp4'):
+            desired_filename += '.mp4'
+        filename_with_path = os.path.join(download_path, desired_filename)
+
+        if os.path.exists(filename_with_path):
+            print(f'File already exists: {filename_with_path}')
+            return Path(filename_with_path)
+
         with sync_playwright() as playwright:
             context = playwright.chromium.launch_persistent_context(
                 user_data_dir,
@@ -59,9 +67,7 @@ class Downloader2:
             download = download_info.value
             if not download:
                 raise Exception('Download failed.')
-            print("Download started ...")
-            print(f"Downloaded file: {download.suggested_filename}")
-
+            print(f"Downloading of file {desired_filename} started ...")
 
             # watch progress
             page = context.new_page()
@@ -87,11 +93,12 @@ class Downloader2:
                     break
                 time.sleep(1)
 
-            # Wait for the download process to complete
-            download.save_as(os.path.join(download_path, desired_filename))
+            # This is a blocking call and will make sure the download is completed before proceeding further
+            download.save_as(filename_with_path)
+            
             print(f'Download completed: {desired_filename}')
             time.sleep(100)
-            return Path(os.path.join(download_path, desired_filename))
+            return Path(filename_with_path)
 
 
     def download_videos(self, videos: List, destination_folder: Optional[str] = None, skip: List = []) -> None:
