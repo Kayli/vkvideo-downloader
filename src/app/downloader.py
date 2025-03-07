@@ -1,108 +1,106 @@
-import yt_dlp
+from playwright.sync_api import sync_playwright, Playwright
+import os, time
+from typing import Optional, List
 from pathlib import Path
-from typing import Optional, List, Union
 from .logger import Logger
 
 class Downloader:
     def __init__(self, logger: Optional[Logger] = None):
         self.logger = logger or Logger()
+        self.download_link_selector = '#vkVideoDownloaderPanel > a:last-of-type'
+        self.low_res_selector = '#vkVideoDownloaderPanel > a:first-of-type'
 
-    def _get_ydl_opts(self, url: str, desired_filename: str, low_res: bool = False, destination_folder: Optional[str] = None) -> dict:
-        """
-        Build yt-dlp options for downloading or getting filename.
+    def wait_for_element(self, page, selector, timeout=20, interval=1):
+        end_time = time.time() + timeout
+        while time.time() < end_time:
+            result = page.evaluate(f'document.querySelector("{selector}")')
+            if result:
+                return
+        time.sleep(interval)
+        raise Exception('Element not found')
 
-        Args:
-            url (str): The URL of the video to download
-            desired_filename (str): The base filename for the downloaded video
-            low_res (bool, optional): If True, download a low-resolution version of the video. Defaults to False.
-            destination_folder (str, optional): Folder to save the video. Defaults to None.
+    def download_video(self, url: str, desired_filename: str, low_res: bool = False, destination_folder: Optional[str] = None):
+        download_path = destination_folder or os.getcwd()
+        path_to_extension = '/home/illiam/Downloads/VK-Video-Downloader-main/chromium'
+        user_data_dir = os.path.expanduser("~/.config/chromium/")
+        download_link_selector = self.low_res_selector if low_res else self.download_link_selector
+        if not desired_filename.endswith('.mp4'):
+            desired_filename += '.mp4'
+        filename_with_path = os.path.join(download_path, desired_filename)
 
-        Returns:
-            dict: Configuration options for yt-dlp
-        """
-        # Prepare base options
-        ydl_opts = {
-            'outtmpl': f"{desired_filename}.%(ext)s",
-            'cookiesfrombrowser': ('chrome', None, None),
-        }
-        
-        # Add low-resolution format selection if enabled
-        if low_res:
-            ydl_opts['format'] = 'dash_sep-1'
-        
-        # Add destination folder if specified
-        if destination_folder:
-            ydl_opts['paths'] = {'home': destination_folder}
-        
-        return ydl_opts
+        if os.path.exists(filename_with_path):
+            print(f'File already exists: {filename_with_path}')
+            return Path(filename_with_path)
 
-    def _get_filename(self, url: str, desired_filename: str) -> str:
-        """
-        Retrieve the filename for a video without downloading it.
+        with sync_playwright() as playwright:
+            context = playwright.chromium.launch_persistent_context(
+                user_data_dir,
+                channel="chromium",
+                args=[
+                    f"--disable-extensions-except={path_to_extension}",
+                    f"--load-extension={path_to_extension}",
+                    f'--download-default-directory={download_path}'
+                ],
+                accept_downloads=True,
+                headless=False
+            )
+            context.set_default_timeout(settings.timeout_browser_sec * 1000)
+            page = context.new_page()
+            page.goto(url)
+            
+            # Check for logged-in status
+            if page.locator('text=Зарегистрируйтесь, чтобы смотреть видео без ограничений').is_visible():
+                raise Exception('User is not logged in. Please log in to continue.')
+            
+            self.wait_for_element(page, download_link_selector)
+            download_link = page.locator(download_link_selector)
+            if not download_link:
+                raise Exception('Download link not found.')
+            download_link_href = download_link.get_attribute('href')
+            print(f'Found download link: {download_link_href}')
 
-        Args:
-            url (str): The URL of the video
-            desired_filename (str): The base filename for the downloaded video
+            # remove video player from page, so that it doesn't consume extra traffic
+            page.locator('#video_player').evaluate('node => node.remove()')
 
-        Returns:
-            str: The actual filename that would be used for the download
-        """
-        # Prepare yt-dlp options
-        ydl_opts = self._get_ydl_opts(url, desired_filename)
-        ydl_opts['simulate'] = True
-        ydl_opts['quiet'] = True
-        
-        self.logger.debug(f"Retrieving filename for URL: {url}")
-        
-        try:
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                info_dict = ydl.extract_info(url, download=False)
-                filename = ydl.prepare_filename(info_dict)
-                
-                self.logger.debug(f"Retrieved filename: {filename}")
-                return filename
-        except Exception as e:
-            self.logger.error(f"Failed to get filename: {e}")
-            raise
+            with page.expect_download() as download_info:
+                # Perform the action that initiates download
+                download_link.click()
+            download = download_info.value
+            if not download:
+                raise Exception('Download failed.')
+            print(f"Downloading of file {desired_filename} started ...")
 
-    def download_video(self, url: str, desired_filename: str, low_res: bool = False, destination_folder: Optional[str] = None) -> Path:
-        """
-        Download a video from the given URL.
+            # watch progress
+            page = context.new_page()
+            page.goto("chrome://downloads/")
 
-        Args:
-            url (str): The URL of the video to download
-            desired_filename (str): The base filename for the downloaded video
-            low_res (bool, optional): If True, download a low-resolution version of the video. Defaults to False.
-            destination_folder (str, optional): Folder to save the video. Defaults to None.
+            progress = None
+            while True:
+                progress = page.evaluate("""[
+                            ...document.querySelectorAll('*')
+                            ]
+                            .concat(
+                                [...document.querySelectorAll('*')]
+                                .flatMap(host => host.shadowRoot ? [
+                                    ...host.shadowRoot.querySelectorAll('*'),
+                                    ...[...host.shadowRoot.querySelectorAll('*')].flatMap(subHost => 
+                                    subHost.shadowRoot ? [...subHost.shadowRoot.querySelectorAll('*')] : []
+                                    )
+                                ] : [])
+                            )
+                            .filter(el => el.id === 'details')[0].children[2].innerText""")
+                print(f'Current progress: {progress.strip()}          ', end='\r')
+                if progress.strip() == '':
+                    break
+                time.sleep(1)
 
-        Returns:
-            Path: Path to the downloaded video file
+            # This is a blocking call and will make sure the download is completed before proceeding further
+            download.save_as(filename_with_path)
+            
+            print(f'Download completed: {desired_filename}')
+            time.sleep(100)
+            return Path(filename_with_path)
 
-        Raises:
-            Exception: If the download fails
-        """
-        # If no destination folder is specified, use current working directory
-        if destination_folder is None:
-            destination_folder = str(Path.cwd())
-        
-        # Prepare yt-dlp options
-        ydl_opts = self._get_ydl_opts(url, desired_filename, low_res, destination_folder)
-        
-        self.logger.debug(f"Downloading video from URL: {url}")
-        
-        try:
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                info_dict = ydl.extract_info(url, download=True)
-                filename = ydl.prepare_filename(info_dict)
-                
-                # Return Path to the downloaded file
-                downloaded_file = Path(filename)
-                self.logger.debug(f"Download complete. File: {downloaded_file}")
-                
-                return downloaded_file
-        except Exception as e:
-            self.logger.error(f"Download failed: {e}")
-            raise
 
     def download_videos(self, videos: List, destination_folder: Optional[str] = None, skip: List = []) -> None:
         """

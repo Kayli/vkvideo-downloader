@@ -2,12 +2,12 @@ from typing import Optional, List
 
 from .logger import Logger
 from .extractor import Extractor
-from .downloader2 import Downloader2
+from .downloader import Downloader
 from .settings import Settings
 
 def create_cli_app(
     extractor: Optional[Extractor] = None,
-    downloader: Optional[Downloader2] = None,
+    downloader: Optional[Downloader] = None,
     logger: Optional[Logger] = None,
     settings: Optional[Settings] = None
 ):
@@ -36,7 +36,7 @@ def create_cli_app(
     extractor = extractor or Extractor(logger=logger)
     
     # Use provided downloader or create a default one with the logger
-    downloader = downloader or Downloader2(logger=logger)
+    downloader = downloader or Downloader(logger=logger)
     
     # Use provided settings or create a default one
     settings = settings or Settings()

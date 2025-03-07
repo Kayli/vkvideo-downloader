@@ -18,8 +18,8 @@ class Browser:
             record_replay (bool): If True, cache page HTML and use cached versions when available.
         """
         self.headless = settings.headless
-        self.timeout = settings.page_load_timeout_sec * 1000  # Convert seconds to milliseconds
-        self.scroll_timeout = settings.scroll_timeout_sec * 1000  # Convert seconds to milliseconds
+        self.timeout = settings.timeout_browser_sec * 1000  # Convert seconds to milliseconds
+        self.scroll_timeout = settings.timeout_browser_scroll_sec * 1000  # Convert seconds to milliseconds
         self.record_replay = record_replay
         self.cache_dir = settings.cache_dir
         

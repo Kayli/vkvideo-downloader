@@ -10,8 +10,8 @@ class Settings:
     """
     
     # Browser and page loading timeouts in seconds
-    page_load_timeout_sec: int = 120  
-    scroll_timeout_sec: int = 20     
+    timeout_browser_scroll_sec: int = 20
+    timeout_browser_sec: int = 120
     
     # Browser configuration defaults
     headless: bool = True
