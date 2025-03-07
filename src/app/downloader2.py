@@ -1,9 +1,12 @@
 from playwright.sync_api import sync_playwright, Playwright
 import os, time
-from typing import Optional
+from typing import Optional, List
+from pathlib import Path
+from .logger import Logger
 
 class Downloader2:
-    def __init__(self):
+    def __init__(self, logger: Optional[Logger] = None):
+        self.logger = logger or Logger()
         self.download_link_selector = '#vkVideoDownloaderPanel > a:last-of-type'
         self.low_res_selector = '#vkVideoDownloaderPanel > a:first-of-type'
 
@@ -15,38 +18,6 @@ class Downloader2:
                 return
         time.sleep(interval)
         raise Exception('Element not found')
-
-    def capture_headers(self, page):
-        # Store the headers in a dictionary
-        request_headers = []
-        response_headers = []
-
-        # Function to handle request headers
-        def handle_request(request):
-            request_headers.append({
-                "url": request.url,
-                "headers": request.headers
-            })
-
-        # Function to handle response headers
-        def handle_response(response):
-            response_headers.append({
-                "url": response.url,
-                "headers": response.headers
-            })
-
-        # Set up listeners for request and response events
-        page.on('request', handle_request)
-        page.on('response', handle_response)
-
-        # Wait to capture requests and responses (adjust the timeout as needed)
-        page.wait_for_timeout(5000)
-
-        # Return both request and response headers as collections
-        return {
-            "requests": request_headers,
-            "responses": response_headers
-        }
 
     def download_video(self, url: str, desired_filename: str, low_res: bool = False, destination_folder: Optional[str] = None):
         download_path = destination_folder or os.getcwd()
@@ -79,10 +50,8 @@ class Downloader2:
             download_link_href = download_link.get_attribute('href')
             print(f'Found download link: {download_link_href}')
 
-
-            # capturing headers
-            headers = self.capture_headers(page)
-            print(f"Captured headers: {headers}")
+            # remove video player from page, so that it doesn't consume extra traffic
+            page.locator('#video_player').evaluate('node => node.remove()')
 
             with page.expect_download() as download_info:
                 # Perform the action that initiates download
@@ -92,9 +61,63 @@ class Downloader2:
                 raise Exception('Download failed.')
             print("Download started ...")
             print(f"Downloaded file: {download.suggested_filename}")
-            # time.sleep(500)
-            
+
+
+            # watch progress
+            page = context.new_page()
+            page.goto("chrome://downloads/")
+
+            progress = None
+            while True:
+                progress = page.evaluate("""[
+                            ...document.querySelectorAll('*')
+                            ]
+                            .concat(
+                                [...document.querySelectorAll('*')]
+                                .flatMap(host => host.shadowRoot ? [
+                                    ...host.shadowRoot.querySelectorAll('*'),
+                                    ...[...host.shadowRoot.querySelectorAll('*')].flatMap(subHost => 
+                                    subHost.shadowRoot ? [...subHost.shadowRoot.querySelectorAll('*')] : []
+                                    )
+                                ] : [])
+                            )
+                            .filter(el => el.id === 'details')[0].children[2].innerText""")
+                print(f'Current progress: {progress.strip()}          ', end='\r')
+                if progress.strip() == '':
+                    break
+                time.sleep(1)
+
             # Wait for the download process to complete
-            download_path = download.path()
-            print(f'Download completed: {download_path}')
-            return Path(download_path)
+            download.save_as(os.path.join(download_path, desired_filename))
+            print(f'Download completed: {desired_filename}')
+            time.sleep(100)
+            return Path(os.path.join(download_path, desired_filename))
+
+
+    def download_videos(self, videos: List, destination_folder: Optional[str] = None, skip: List = []) -> None:
+        """
+        Download multiple videos to the specified destination.
+
+        Args:
+            videos (List): List of videos to download, each with url and title attributes
+            destination_folder (str, optional): Folder to save the videos. Defaults to None.
+            skip (List, optional): List of videos to skip downloading. Defaults to an empty list.
+        """
+        self.logger.info(f"Downloading {len(videos)} videos ...")
+        
+        for video in videos:
+            # Skip video if it's in the skip collection
+            if video in skip:
+                self.logger.info(f"Skipping video {video.title} as it is in the skip collection...")
+                continue
+
+            try:
+                self.logger.info(f"Downloading {video.title} via {video.url}...")
+                self.download_video(
+                    video.url, 
+                    video.title, 
+                    destination_folder=destination_folder
+                )
+            except Exception as e:
+                self.logger.error(f"Failed to download video {video.title} from {video.url}: {e}")
+                raise
