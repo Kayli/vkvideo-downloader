@@ -7,10 +7,6 @@ from .settings import Settings
 from .cli_app import CLIApp
 
 class Factory:
-    def __init__(self, logger: Optional[Logger] = None, settings: Optional[Settings] = None):
-        self.logger = logger or Logger()
-        self.settings = settings or Settings()
-
     @staticmethod
     def create_cli_app(
         extractor: Optional[Extractor] = None,
@@ -18,6 +14,7 @@ class Factory:
         settings: Optional[Settings] = None,
         logger: Optional[Logger] = None,
     ) -> CLIApp:
+        logger = logger or Logger()
         extractor = extractor or Extractor(logger=logger)
         downloader = downloader or Downloader(logger=logger)
         settings = settings or Settings()
