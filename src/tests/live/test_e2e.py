@@ -1,21 +1,24 @@
 import pytest
 from ..unit.fakes.capture_logger import CaptureLogger
 from ...app.factory import Factory
+import os
 
 @pytest.fixture
 def test_url():
-    return "https://vkvideo.ru/@public111751633/all"
+    return "https://vkvideo.ru/@club180058315/all"
 
 @pytest.fixture
 def capture_logger():
     """Create a CaptureLogger for testing."""
     return CaptureLogger()
 
-@pytest.mark.skip(reason="Skipping this test for now, as it tries to download a bunch of huge size videos")
+# @pytest.mark.skip(reason="Skipping this test for now, as it tries to download a bunch of huge size videos")
 def test_extract_video_links(test_url, capture_logger):
     """Test successful video extraction via CLIApp"""
     app = Factory.create_cli_app(logger=capture_logger)
-    app.run(['url', test_url])
+    # app.run(['url', test_url])
+    os.chdir("/home/illiam/Downloads/bushwacker")
+    app.run(['goodstuff'])
     assert len(capture_logger.captured_logs['info']) > 0, "Should have info logs"
     assert any("Extracting videos from URL" in log for log in capture_logger.captured_logs['info']), "Should log URL extraction"
     assert any("Extracted" in log for log in capture_logger.captured_logs['info']), "Should log number of extracted videos"

@@ -11,6 +11,7 @@ from .extractor import Extractor
 from .downloader import Downloader
 from .logger import Logger
 from .settings import Settings
+from .extractor import VideoDTO
 
 # Constants
 GOODSTUFF_VIDEOS = [
@@ -172,6 +173,26 @@ class CLIApp:
             except subprocess.CalledProcessError as e:
                 raise CLIAppError(f"Failed to download video {video.title} from {video.url}: {e}")
 
+
+    def filter(self, videos: List[VideoDTO]) -> List[VideoDTO]:
+        """
+        Filter out videos that are in the skiplist.
+        
+        Args:
+            videos (List[VideoDTO]): List of videos to filter
+        
+        Returns:
+            List[VideoDTO]: Filtered list of videos
+        """
+        filtered_videos = []
+        for video in videos:
+            if video.url not in self.settings.skiplist:
+                filtered_videos.append(video)
+            else:
+                self.logger.info(f'Skipped video: {video.title}')
+        return filtered_videos
+
+
     def run(self, cli_args: Optional[List[str]] = None) -> None:
         """
         Main entry point for the VK Video Link Downloader.
@@ -207,12 +228,14 @@ class CLIApp:
 
         # Extracts video URLs from the vk videos pages or from cache
         videos_cached = self.extractor.extract_videos_from_urls_cached(videopage_urls)
-        
+        videos_cached = self.filter(videos_cached)
+
         # Download videos
         self.downloader.download_videos(videos_cached, str(dest_path))
 
         # Check for videos that are not in the cache and download them if there are any
         videos_not_in_cache = self.extractor.extract_videos_from_urls(videopage_urls)
+        videos_not_in_cache = self.filter(videos_not_in_cache)
         self.downloader.download_videos(videos_not_in_cache, str(dest_path), skip=videos_cached)
         
         self.logger.info("Application execution completed")

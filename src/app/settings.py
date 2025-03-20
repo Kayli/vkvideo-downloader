@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-
+from typing import List
 @dataclass
 class Settings:
     """
@@ -18,3 +18,7 @@ class Settings:
     
     # Cache directory for browser record/replay
     cache_dir: str = "recordings"
+
+    skiplist = [
+        "https://vkvideo.ru/video-180058315_456239188"
+    ]

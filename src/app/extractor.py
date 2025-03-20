@@ -144,6 +144,24 @@ class Extractor:
                 video_links.append(VideoDTO(url, title))
             
             self.logger.info(f"Extracted {len(video_links)} unique video links")
+
+            # Cache the extracted links
+            # Create cache filename based on URL hash
+            import hashlib
+            cache_filename = os.path.join(self.cache_dir, hashlib.md5(url.encode()).hexdigest() + '.yaml')
+
+            if os.path.exists(cache_filename):
+                # remove cache file if old cache exists
+                os.remove(cache_filename)
+
+            if video_links:
+                cached_data = [{'url': video.url, 'title': video.title} for video in video_links]
+                with open(cache_filename, 'w') as f:
+                    yaml.safe_dump(cached_data, f)
+                self.logger.info(f"Cached {len(video_links)} video links for {url}")
+            else:
+                self.logger.warning(f"No videos found to cache for {url}")
+            
             return video_links
         
         except TimeoutError as e:
@@ -172,6 +190,31 @@ class Extractor:
         for url in urls:
             self.logger.info(f"Processing URL: {url}")
             videos = self.extract_video_links_cached(url)
+            all_videos.extend(videos)
+        
+        # Log number of extracted videos
+        self.logger.info(f"Extracted {len(all_videos)} unique video links")
+        
+        return all_videos
+
+
+    def extract_videos_from_urls(self, urls: List[str]) -> List[VideoDTO]:
+        """
+        Extract video links from multiple URLs using cached extraction method.
+        
+        Args:
+            urls (List[str]): List of URLs to extract videos from
+        
+        Returns:
+            List[VideoDTO]: Consolidated list of video links
+        
+        Raises:
+            Exception: If any URL fails to extract videos
+        """
+        all_videos = []
+        for url in urls:
+            self.logger.info(f"Processing URL: {url}")
+            videos = self.extract_video_links(url)
             all_videos.extend(videos)
         
         # Log number of extracted videos
